@@ -105,7 +105,7 @@ const CROSSHAIR_SETTINGS = {
     description: 'Length of the crosshair lines.',
     type: 'range',
     default: 2.5,
-    min: -20,
+    min: 0,
     max: 20,
     step: 0.5,
   },

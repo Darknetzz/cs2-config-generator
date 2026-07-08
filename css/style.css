@@ -269,6 +269,35 @@ body {
   margin-left: auto;
 }
 
+.aspect-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.aspect-btn {
+  padding: 0.3rem 0.65rem;
+  font-size: 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface-raised);
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.aspect-btn:hover {
+  border-color: var(--accent);
+}
+
+.aspect-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-text);
+  font-weight: 600;
+}
+
 .color-swatch {
   display: inline-block;
   width: 1.5rem;
@@ -723,12 +752,18 @@ select {
 }
 
 .btn-ghost {
-  color: var(--muted);
+  color: var(--text);
 }
 
-.btn-ghost:hover {
+.btn-ghost:hover:not(:disabled) {
   color: var(--danger);
   border-color: var(--danger);
+}
+
+.btn-ghost:disabled {
+  color: var(--muted);
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .command-output {

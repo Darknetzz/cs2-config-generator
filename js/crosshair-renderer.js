@@ -286,15 +286,15 @@ const CrosshairRenderer = (() => {
     return gap + state.cl_crosshair_dynamic_splitdist * dynamicFactor;
   }
 
-  function drawCrosshair(ctx, displaySize, state, background, dynamicFactor = 0) {
+  function drawCrosshair(ctx, width, height, state, background, dynamicFactor = 0) {
     const scale = 1;
-    const offsetX = Math.floor((displaySize - INTERNAL_SIZE) / 2);
-    const offsetY = Math.floor((displaySize - INTERNAL_SIZE) / 2);
+    const offsetX = Math.floor((width - INTERNAL_SIZE) / 2);
+    const offsetY = Math.floor((height - INTERNAL_SIZE) / 2);
     const centerX = Math.floor(INTERNAL_SIZE / 2);
     const centerY = Math.floor(INTERNAL_SIZE / 2);
 
-    ctx.clearRect(0, 0, displaySize, displaySize);
-    drawBackground(ctx, displaySize, displaySize, background);
+    ctx.clearRect(0, 0, width, height);
+    drawBackground(ctx, width, height, background);
 
     ctx.save();
     ctx.translate(offsetX, offsetY);
@@ -344,7 +344,7 @@ const CrosshairRenderer = (() => {
    */
   function render(canvas, state, background = 'dark', dynamicFactor = 0) {
     const ctx = canvas.getContext('2d');
-    drawCrosshair(ctx, canvas.width, state, background, dynamicFactor);
+    drawCrosshair(ctx, canvas.width, canvas.height, state, background, dynamicFactor);
   }
 
   function animationLoop(timestamp) {

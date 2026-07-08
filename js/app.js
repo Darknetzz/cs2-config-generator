@@ -7,6 +7,7 @@
 
   let crosshairState = createDefaultCrosshairState();
   let previewBackground = 'dark';
+  let previewAspect = PreviewAspect.DEFAULT_ID;
   let colorTheme = 'system';
   let suppressPersist = false;
 
@@ -21,6 +22,7 @@
     colorSwatch: document.getElementById('color-swatch'),
     styleNote: document.getElementById('style-note'),
     bgToggleRoot: document.getElementById('bg-toggle-root'),
+    aspectToggle: document.getElementById('aspect-toggle'),
     presetsGrid: document.getElementById('presets-grid'),
     themeToggle: document.getElementById('theme-toggle'),
   };
@@ -66,11 +68,25 @@
     els.commandOutput.value = CrosshairCommands.toMultilineString(crosshairState);
   }
 
+  function isAtFullDefault() {
+    for (const key of CROSSHAIR_CVAR_ORDER) {
+      if (!isSettingAtDefault(key, crosshairState)) return false;
+    }
+    return previewBackground === Backgrounds.DEFAULT_ID
+      && previewAspect === PreviewAspect.DEFAULT_ID
+      && colorTheme === 'system';
+  }
+
+  function updateResetAllButton() {
+    els.resetBtn.disabled = isAtFullDefault();
+  }
+
   function refresh() {
     updatePreview();
     updateCommands();
     updateControlStates();
     updateColorPresetButtons();
+    updateResetAllButton();
     if (!suppressPersist) persistState();
   }
 
@@ -411,6 +427,11 @@
         loaded = true;
       }
 
+      if (parsed?.previewAspect && PreviewAspect.isValidId(parsed.previewAspect)) {
+        previewAspect = parsed.previewAspect;
+        loaded = true;
+      }
+
       if (parsed?.theme === 'system' || parsed?.theme === 'light' || parsed?.theme === 'dark') {
         colorTheme = parsed.theme;
         loaded = true;
@@ -427,6 +448,7 @@
       localStorage.setItem(STORAGE_KEY, JSON.stringify({
         crosshair: crosshairState,
         previewBackground,
+        previewAspect,
         theme: colorTheme,
       }));
       const url = new URL(window.location.href);
@@ -493,11 +515,14 @@
   function resetToDefaults() {
     crosshairState = createDefaultCrosshairState();
     previewBackground = Backgrounds.DEFAULT_ID;
+    previewAspect = PreviewAspect.DEFAULT_ID;
     colorTheme = 'system';
     syncControlsFromState();
     els.bgToggleRoot.querySelectorAll('[data-bg]').forEach((btn) => {
       btn.classList.toggle('active', btn.dataset.bg === previewBackground);
     });
+    updateAspectToggle();
+    applyPreviewCanvasSize();
     setColorTheme(colorTheme);
     refresh();
     showToast('Reset to defaults');
@@ -537,6 +562,28 @@
     if (!suppressPersist) persistState();
   }
 
+  function setPreviewAspect(id) {
+    if (!PreviewAspect.isValidId(id)) return;
+    previewAspect = id;
+    updateAspectToggle();
+    applyPreviewCanvasSize();
+    updatePreview();
+    if (!suppressPersist) persistState();
+  }
+
+  function updateAspectToggle() {
+    els.aspectToggle?.querySelectorAll('[data-aspect]').forEach((btn) => {
+      btn.classList.toggle('active', btn.dataset.aspect === previewAspect);
+    });
+  }
+
+  function initAspectToggle() {
+    updateAspectToggle();
+    els.aspectToggle?.querySelectorAll('[data-aspect]').forEach((btn) => {
+      btn.addEventListener('click', () => setPreviewAspect(btn.dataset.aspect));
+    });
+  }
+
   function buildBackgroundToggles() {
     els.bgToggleRoot.replaceChildren();
 
@@ -569,10 +616,17 @@
     }
   }
 
+  function applyPreviewCanvasSize() {
+    const { width, height } = PreviewAspect.getDimensions(
+      CrosshairRenderer.PREVIEW_SIZE,
+      previewAspect,
+    );
+    els.previewCanvas.width = width;
+    els.previewCanvas.height = height;
+  }
+
   function initPreviewCanvas() {
-    const size = CrosshairRenderer.PREVIEW_SIZE;
-    els.previewCanvas.width = size;
-    els.previewCanvas.height = size;
+    applyPreviewCanvasSize();
   }
 
   function init() {
@@ -581,6 +635,7 @@
 
     initPreviewCanvas();
     initThemeToggle();
+    initAspectToggle();
     buildPresetsUI();
     buildSettingsUI();
     buildBackgroundToggles();
