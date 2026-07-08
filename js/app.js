@@ -432,7 +432,7 @@
     const canvas = document.createElement('canvas');
     canvas.className = 'preset-mini-canvas';
     canvas.setAttribute('aria-hidden', 'true');
-    CrosshairRenderer.renderMini(canvas, state, 112);
+    CrosshairRenderer.renderMini(canvas, state, 64);
 
     wrap.append(canvas);
     return wrap;

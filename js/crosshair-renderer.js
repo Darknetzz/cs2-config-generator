@@ -642,11 +642,12 @@ const CrosshairRenderer = (() => {
 
   /**
    * Render a small crosshair preview for preset cards.
+   * Crops tight on the crosshair and scales it up to fill the frame.
    * @param {HTMLCanvasElement} canvas
    * @param {object} state
-   * @param {number} [size=48]
+   * @param {number} [size=64]
    */
-  function renderMini(canvas, state, size = 48) {
+  function renderMini(canvas, state, size = 64) {
     const scratch = document.createElement('canvas');
     scratch.width = PREVIEW_SIZE;
     scratch.height = PREVIEW_SIZE;
@@ -654,12 +655,16 @@ const CrosshairRenderer = (() => {
     drawSolidBackground(scratchCtx, PREVIEW_SIZE, PREVIEW_SIZE, '#2a2825');
     drawUserCrosshair(scratchCtx, PREVIEW_SIZE, PREVIEW_SIZE, state, 0);
 
+    const cropSize = INTERNAL_SIZE + 8;
+    const sx = (PREVIEW_SIZE - cropSize) / 2;
+    const sy = (PREVIEW_SIZE - cropSize) / 2;
+
     canvas.width = size;
     canvas.height = size;
     const ctx = canvas.getContext('2d');
     ctx.imageSmoothingEnabled = false;
     drawSolidBackground(ctx, size, size, '#2a2825');
-    ctx.drawImage(scratch, 0, 0, size, size);
+    ctx.drawImage(scratch, sx, sy, cropSize, cropSize, 0, 0, size, size);
   }
 
   function animationLoop(timestamp) {
