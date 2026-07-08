@@ -544,45 +544,60 @@ const CrosshairRenderer = (() => {
     ctx.restore();
   }
 
-  function getSniperCrosshairColor() {
-    return { r: 255, g: 255, b: 255, a: 1 };
-  }
-
   function drawSniperScope(ctx, width, height, state) {
     const cx = width / 2;
     const cy = height / 2;
     const radius = Math.min(width, height) * 0.42;
-    const lineWidth = Math.max(1, state.cl_crosshair_sniper_width * (height / PREVIEW_SIZE) * 8);
-    const color = getSniperCrosshairColor();
+    const scale = height / 1080;
+    const lineWidth = Math.max(1, Math.round(state.cl_crosshair_sniper_width * scale));
+    const centerGap = Math.max(3, radius * 0.035);
+    const dotRadius = Math.max(2, lineWidth * 2.2);
 
     ctx.save();
 
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.65)';
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.78)';
     ctx.beginPath();
     ctx.rect(0, 0, width, height);
     ctx.arc(cx, cy, radius, 0, Math.PI * 2, true);
     ctx.fill('evenodd');
 
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
-    ctx.lineWidth = Math.max(1, lineWidth * 0.5);
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.45)';
+    ctx.lineWidth = Math.max(1, scale * 2);
     ctx.beginPath();
     ctx.arc(cx, cy, radius, 0, Math.PI * 2);
     ctx.stroke();
 
-    ctx.strokeStyle = colorToRgba(color);
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+    ctx.clip();
+
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.92)';
     ctx.lineWidth = lineWidth;
+    ctx.lineCap = 'butt';
     ctx.beginPath();
     ctx.moveTo(cx - radius, cy);
+    ctx.lineTo(cx - centerGap, cy);
+    ctx.moveTo(cx + centerGap, cy);
     ctx.lineTo(cx + radius, cy);
     ctx.moveTo(cx, cy - radius);
+    ctx.lineTo(cx, cy - centerGap);
+    ctx.moveTo(cx, cy + centerGap);
     ctx.lineTo(cx, cy + radius);
     ctx.stroke();
 
+    ctx.shadowColor = 'rgba(235, 228, 210, 0.85)';
+    ctx.shadowBlur = Math.max(2, scale * 5);
+    ctx.fillStyle = 'rgba(240, 235, 220, 0.95)';
+    ctx.beginPath();
+    ctx.arc(cx, cy, dotRadius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
     if (state.cl_sniper_show_inaccuracy === 1) {
       const pulse = reduceMotion ? 0.35 : (Math.sin(performance.now() / 400) + 1) / 2;
-      const inaccuracyRadius = radius * (0.12 + pulse * 0.08);
-      ctx.strokeStyle = `rgba(${color.r}, ${color.g}, ${color.b}, ${color.a * 0.45})`;
-      ctx.lineWidth = Math.max(1, lineWidth * 0.6);
+      const inaccuracyRadius = centerGap * (2.5 + pulse * 1.5);
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.35)';
+      ctx.lineWidth = Math.max(1, lineWidth * 0.8);
       ctx.beginPath();
       ctx.arc(cx, cy, inaccuracyRadius, 0, Math.PI * 2);
       ctx.stroke();

@@ -301,7 +301,7 @@ const CROSSHAIR_SETTINGS = {
   },
   cl_crosshair_sniper_width: {
     label: 'Sniper width',
-    description: 'Width of sniper scope crosshair lines (scoped view uses fixed white lines, not your crosshair color).',
+    description: 'Width of sniper scope crosshair lines (scoped view uses fixed black lines and a center dot, not your crosshair color).',
     type: 'range',
     default: 1,
     min: 1,
