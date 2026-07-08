@@ -269,35 +269,6 @@ body {
   margin-left: auto;
 }
 
-.aspect-toggle {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  flex-shrink: 0;
-}
-
-.aspect-btn {
-  padding: 0.3rem 0.65rem;
-  font-size: 0.8rem;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--surface-raised);
-  color: var(--text);
-  cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
-}
-
-.aspect-btn:hover {
-  border-color: var(--accent);
-}
-
-.aspect-btn.active {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: var(--accent-text);
-  font-weight: 600;
-}
-
 .color-swatch {
   display: inline-block;
   width: 1.5rem;
@@ -312,24 +283,17 @@ body {
   justify-content: center;
   align-items: center;
   border-radius: var(--radius);
-  overflow-x: auto;
-  overflow-y: hidden;
+  overflow: hidden;
   border: 1px solid var(--border);
-  scrollbar-width: thin;
 }
 
 #preview-canvas {
   display: block;
-  width: auto;
-  height: var(--preview-display-height, 420px);
-  max-width: none;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  aspect-ratio: 1 / 1;
   image-rendering: pixelated;
-}
-
-@media (max-width: 860px) {
-  #preview-canvas {
-    height: min(420px, 72vw);
-  }
 }
 
 .preview-note {

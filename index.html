@@ -40,9 +40,6 @@
     <section class="preview-panel" aria-label="Crosshair preview">
       <div class="preview-toolbar">
         <div id="bg-toggle-root" class="bg-toggle-root" aria-label="Preview background"></div>
-        <div id="aspect-toggle" class="aspect-toggle" role="group" aria-label="Preview aspect ratio">
-          <span class="toolbar-label">Aspect</span>
-        </div>
         <div class="color-preview" aria-label="Current crosshair color">
           <span class="toolbar-label">Color</span>
           <span id="color-swatch" class="color-swatch"></span>
@@ -57,7 +54,7 @@
         Dynamic preview — crosshair expands as if you were moving or shooting in-game.
       </p>
       <p class="preview-note muted">
-        Crosshair size scales with preview height to match in-game pixels at a 1080p reference. Recoil follow, weapon gap, and sniper scope behavior are not simulated.
+        Crosshair is shown at true in-game size (64×64 px at 1080p). Recoil follow, weapon gap, and sniper scope behavior are not simulated.
       </p>
     </section>
 
@@ -97,7 +94,6 @@
   <script src="js/crosshair-settings.js"></script>
   <script src="js/presets.js"></script>
   <script src="js/backgrounds.js"></script>
-  <script src="js/preview-aspect.js"></script>
   <script src="js/crosshair-renderer.js"></script>
   <script src="js/commands.js"></script>
   <script src="js/app.js"></script>

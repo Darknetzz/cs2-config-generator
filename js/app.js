@@ -7,7 +7,6 @@
 
   let crosshairState = createDefaultCrosshairState();
   let previewBackground = 'dark';
-  let previewAspect = PreviewAspect.DEFAULT_ID;
   let colorTheme = 'system';
   let suppressPersist = false;
 
@@ -22,7 +21,6 @@
     colorSwatch: document.getElementById('color-swatch'),
     styleNote: document.getElementById('style-note'),
     bgToggleRoot: document.getElementById('bg-toggle-root'),
-    aspectToggle: document.getElementById('aspect-toggle'),
     presetsGrid: document.getElementById('presets-grid'),
     themeToggle: document.getElementById('theme-toggle'),
   };
@@ -72,9 +70,7 @@
     for (const key of CROSSHAIR_CVAR_ORDER) {
       if (!isSettingAtDefault(key, crosshairState)) return false;
     }
-    return previewBackground === Backgrounds.DEFAULT_ID
-      && previewAspect === PreviewAspect.DEFAULT_ID
-      && colorTheme === 'system';
+    return previewBackground === Backgrounds.DEFAULT_ID && colorTheme === 'system';
   }
 
   function updateResetAllButton() {
@@ -427,11 +423,6 @@
         loaded = true;
       }
 
-      if (parsed?.previewAspect && PreviewAspect.isValidId(parsed.previewAspect)) {
-        previewAspect = parsed.previewAspect;
-        loaded = true;
-      }
-
       if (parsed?.theme === 'system' || parsed?.theme === 'light' || parsed?.theme === 'dark') {
         colorTheme = parsed.theme;
         loaded = true;
@@ -448,7 +439,6 @@
       localStorage.setItem(STORAGE_KEY, JSON.stringify({
         crosshair: crosshairState,
         previewBackground,
-        previewAspect,
         theme: colorTheme,
       }));
       const url = new URL(window.location.href);
@@ -515,14 +505,11 @@
   function resetToDefaults() {
     crosshairState = createDefaultCrosshairState();
     previewBackground = Backgrounds.DEFAULT_ID;
-    previewAspect = PreviewAspect.DEFAULT_ID;
     colorTheme = 'system';
     syncControlsFromState();
     els.bgToggleRoot.querySelectorAll('[data-bg]').forEach((btn) => {
       btn.classList.toggle('active', btn.dataset.bg === previewBackground);
     });
-    updateAspectToggle();
-    applyPreviewCanvasSize();
     setColorTheme(colorTheme);
     refresh();
     showToast('Reset to defaults');
@@ -562,38 +549,6 @@
     if (!suppressPersist) persistState();
   }
 
-  function setPreviewAspect(id) {
-    if (!PreviewAspect.isValidId(id)) return;
-    previewAspect = id;
-    updateAspectToggle();
-    applyPreviewCanvasSize();
-    updatePreview();
-    if (!suppressPersist) persistState();
-  }
-
-  function updateAspectToggle() {
-    els.aspectToggle?.querySelectorAll('[data-aspect]').forEach((btn) => {
-      btn.classList.toggle('active', btn.dataset.aspect === previewAspect);
-    });
-  }
-
-  function initAspectToggle() {
-    const label = els.aspectToggle?.querySelector('.toolbar-label');
-    if (!els.aspectToggle || !label) return;
-
-    els.aspectToggle.replaceChildren(label);
-    for (const option of PreviewAspect.OPTIONS) {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'aspect-btn';
-      btn.dataset.aspect = option.id;
-      btn.textContent = option.label;
-      btn.addEventListener('click', () => setPreviewAspect(option.id));
-      els.aspectToggle.append(btn);
-    }
-    updateAspectToggle();
-  }
-
   function buildBackgroundToggles() {
     els.bgToggleRoot.replaceChildren();
 
@@ -626,18 +581,10 @@
     }
   }
 
-  function applyPreviewCanvasSize() {
-    const { width, height } = PreviewAspect.getDimensions(
-      CrosshairRenderer.PREVIEW_SIZE,
-      previewAspect,
-    );
-    els.previewCanvas.width = width;
-    els.previewCanvas.height = height;
-    els.previewCanvas.closest('.canvas-wrap')?.setAttribute('data-aspect', previewAspect);
-  }
-
   function initPreviewCanvas() {
-    applyPreviewCanvasSize();
+    const size = CrosshairRenderer.PREVIEW_SIZE;
+    els.previewCanvas.width = size;
+    els.previewCanvas.height = size;
   }
 
   function init() {
@@ -646,7 +593,6 @@
 
     initPreviewCanvas();
     initThemeToggle();
-    initAspectToggle();
     buildPresetsUI();
     buildSettingsUI();
     buildBackgroundToggles();
