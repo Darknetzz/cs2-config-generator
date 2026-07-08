@@ -209,6 +209,7 @@ const CROSSHAIR_SETTINGS = {
     min: -10,
     max: 10,
     step: 0.5,
+    enabledWhen: { key: 'cl_crosshairgap_useweaponvalue', value: 0 },
   },
   cl_crosshair_dynamic_splitdist: {
     label: 'Dynamic split distance',
@@ -218,6 +219,7 @@ const CROSSHAIR_SETTINGS = {
     min: 0,
     max: 20,
     step: 0.5,
+    enabledWhen: { key: 'cl_crosshairgap_useweaponvalue', value: 1 },
   },
   cl_crosshair_dynamic_splitalpha_innermod: {
     label: 'Split alpha (inner)',
@@ -227,6 +229,7 @@ const CROSSHAIR_SETTINGS = {
     min: 0,
     max: 1,
     step: 0.05,
+    enabledWhen: { key: 'cl_crosshairgap_useweaponvalue', value: 1 },
   },
   cl_crosshair_dynamic_splitalpha_outermod: {
     label: 'Split alpha (outer)',
@@ -236,6 +239,7 @@ const CROSSHAIR_SETTINGS = {
     min: 0,
     max: 1,
     step: 0.05,
+    enabledWhen: { key: 'cl_crosshairgap_useweaponvalue', value: 1 },
   },
   cl_crosshair_dynamic_maxdist_splitratio: {
     label: 'Max split ratio',
@@ -245,6 +249,7 @@ const CROSSHAIR_SETTINGS = {
     min: 0,
     max: 1,
     step: 0.05,
+    enabledWhen: { key: 'cl_crosshairgap_useweaponvalue', value: 1 },
   },
   cl_crosshair_sniper_width: {
     label: 'Sniper width',
