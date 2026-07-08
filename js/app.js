@@ -415,18 +415,24 @@
     buildCustomPresetsUI();
   }
 
+  function getSavePresetLabel() {
+    const typed = els.savePresetName.value.trim();
+    return typed || els.savePresetName.placeholder;
+  }
+
   function showSavePresetForm() {
     els.savePresetForm.hidden = false;
     els.savePresetBtn.hidden = true;
-    els.savePresetName.value = CustomPresets.getNextDefaultLabel(customPresets);
+    els.savePresetName.placeholder = CustomPresets.getNextDefaultLabel(customPresets);
+    els.savePresetName.value = '';
     els.savePresetName.focus();
-    els.savePresetName.select();
   }
 
   function hideSavePresetForm() {
     els.savePresetForm.hidden = true;
     els.savePresetBtn.hidden = false;
     els.savePresetName.value = '';
+    els.savePresetName.placeholder = 'Preset name';
   }
 
   function saveCurrentPreset(name) {
@@ -466,7 +472,7 @@
     els.savePresetCancel?.addEventListener('click', hideSavePresetForm);
     els.savePresetForm?.addEventListener('submit', (event) => {
       event.preventDefault();
-      saveCurrentPreset(els.savePresetName.value);
+      saveCurrentPreset(getSavePresetLabel());
     });
   }
 
