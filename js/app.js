@@ -20,6 +20,7 @@
     colorSwatch: document.getElementById('color-swatch'),
     styleNote: document.getElementById('style-note'),
     bgToggleRoot: document.getElementById('bg-toggle-root'),
+    presetsGrid: document.getElementById('presets-grid'),
   };
 
   function showToast(message) {
@@ -188,6 +189,37 @@
 
     row.append(labelWrap, control);
     return row;
+  }
+
+  function applyPreset(preset) {
+    crosshairState = { ...preset.state };
+    syncControlsFromState();
+    refresh();
+    showToast(`Loaded ${preset.label}`);
+  }
+
+  function buildPresetsUI() {
+    els.presetsGrid.replaceChildren();
+
+    for (const preset of CrosshairPresets.PRESETS) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'preset-btn';
+      btn.setAttribute('role', 'listitem');
+      btn.setAttribute('aria-label', `Load ${preset.label} crosshair`);
+
+      const name = document.createElement('span');
+      name.className = 'preset-name';
+      name.textContent = preset.label;
+
+      const team = document.createElement('span');
+      team.className = 'preset-team';
+      team.textContent = preset.team;
+
+      btn.append(name, team);
+      btn.addEventListener('click', () => applyPreset(preset));
+      els.presetsGrid.append(btn);
+    }
   }
 
   function buildSettingsUI() {
@@ -372,6 +404,7 @@
     if (!fromUrl) loadFromStorage();
 
     initPreviewCanvas();
+    buildPresetsUI();
     buildSettingsUI();
     buildBackgroundToggles();
 

@@ -310,6 +310,17 @@ function clampSettingValue(key, raw) {
   return val;
 }
 
+/** Build state from default values plus preset overrides. */
+function applyPresetState(overrides) {
+  const state = createDefaultCrosshairState();
+  for (const [key, value] of Object.entries(overrides)) {
+    if (key in CROSSHAIR_SETTINGS) {
+      state[key] = clampSettingValue(key, value);
+    }
+  }
+  return state;
+}
+
 /** Whether a setting row should be enabled given current state. */
 function isSettingEnabled(key, state) {
   const meta = CROSSHAIR_SETTINGS[key];
