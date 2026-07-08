@@ -312,16 +312,24 @@ body {
   justify-content: center;
   align-items: center;
   border-radius: var(--radius);
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
   border: 1px solid var(--border);
+  scrollbar-width: thin;
 }
 
 #preview-canvas {
   display: block;
-  width: 100%;
-  max-width: 100%;
-  height: auto;
+  width: auto;
+  height: var(--preview-display-height, 420px);
+  max-width: none;
   image-rendering: pixelated;
+}
+
+@media (max-width: 860px) {
+  #preview-canvas {
+    height: min(420px, 72vw);
+  }
 }
 
 .preview-note {
