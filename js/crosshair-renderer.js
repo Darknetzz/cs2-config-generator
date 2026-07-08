@@ -18,7 +18,6 @@ const CrosshairRenderer = (() => {
     TICK_INTERVAL: 10,
     TICK_SCALING: 1.1,
     CENTER_GAP: 14,
-    LINE_ALPHA: 0.88,
     SMALL_TICK: 5,
     LARGE_TICK: 10,
     MAJOR_EVERY: 5,
@@ -353,14 +352,18 @@ const CrosshairRenderer = (() => {
     return (height / GRENADE_RETICLE.REF_HEIGHT) * GRENADE_RETICLE.TICK_SCALING;
   }
 
-  function drawRulerSegment(ctx, x0, y0, x1, y1, horizontal, tickSpacing, tickScale) {
-    const { SMALL_TICK, LARGE_TICK, MAJOR_EVERY, LINE_ALPHA } = GRENADE_RETICLE;
+  function colorToRgba(color) {
+    return `rgba(${color.r}, ${color.g}, ${color.b}, ${color.a})`;
+  }
+
+  function drawRulerSegment(ctx, x0, y0, x1, y1, horizontal, tickSpacing, tickScale, color) {
+    const { SMALL_TICK, LARGE_TICK, MAJOR_EVERY } = GRENADE_RETICLE;
     const cx = (x0 + x1) / 2;
     const cy = (y0 + y1) / 2;
     const length = horizontal ? Math.abs(x1 - x0) : Math.abs(y1 - y0);
     const lineW = Math.max(1, tickScale * 0.9);
 
-    ctx.strokeStyle = `rgba(255, 255, 255, ${LINE_ALPHA})`;
+    ctx.strokeStyle = colorToRgba(color);
     ctx.lineWidth = lineW;
     ctx.beginPath();
     ctx.moveTo(x0, y0);
@@ -395,7 +398,7 @@ const CrosshairRenderer = (() => {
     }
   }
 
-  function drawGrenadeLineupReticle(ctx, width, height) {
+  function drawGrenadeLineupReticle(ctx, width, height, color) {
     const tickScale = getGrenadeReticleScale(height);
     const gap = (GRENADE_RETICLE.CENTER_GAP / 2) * tickScale;
     const tickSpacing = GRENADE_RETICLE.TICK_INTERVAL * tickScale;
@@ -403,10 +406,10 @@ const CrosshairRenderer = (() => {
     const cy = height / 2;
     const pad = Math.max(1, tickScale);
 
-    drawRulerSegment(ctx, pad, cy, cx - gap, cy, true, tickSpacing, tickScale);
-    drawRulerSegment(ctx, cx + gap, cy, width - pad, cy, true, tickSpacing, tickScale);
-    drawRulerSegment(ctx, cx, pad, cx, cy - gap, false, tickSpacing, tickScale);
-    drawRulerSegment(ctx, cx, cy + gap, cx, height - pad, false, tickSpacing, tickScale);
+    drawRulerSegment(ctx, pad, cy, cx - gap, cy, true, tickSpacing, tickScale, color);
+    drawRulerSegment(ctx, cx + gap, cy, width - pad, cy, true, tickSpacing, tickScale, color);
+    drawRulerSegment(ctx, cx, pad, cx, cy - gap, false, tickSpacing, tickScale, color);
+    drawRulerSegment(ctx, cx, cy + gap, cx, height - pad, false, tickSpacing, tickScale, color);
   }
 
   function drawLineupDisabledOverlay(ctx, width, height) {
@@ -440,10 +443,11 @@ const CrosshairRenderer = (() => {
       const enabled = PreviewMode.isLineupEnabled(state);
 
       if (enabled) {
+        const color = resolveColor(state);
         if (state.cl_grenadecrosshair_keepusercrosshair === 1) {
           drawUserCrosshair(ctx, width, height, state, dynamicFactor);
         }
-        drawGrenadeLineupReticle(ctx, width, height);
+        drawGrenadeLineupReticle(ctx, width, height, color);
         return;
       }
 
