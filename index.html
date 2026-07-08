@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CS2 Crosshair Generator</title>
+  <meta name="description" content="Design a Counter-Strike 2 crosshair with live preview and copy console commands instantly.">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <h1>CS2 Crosshair Generator</h1>
+    <p class="subtitle">Tweak every crosshair setting, preview it live, and copy the console commands.</p>
+  </header>
+
+  <main class="layout">
+    <section class="preview-panel" aria-label="Crosshair preview">
+      <div class="preview-toolbar">
+        <span class="toolbar-label">Background</span>
+        <div class="bg-toggle" role="group" aria-label="Preview background">
+          <button type="button" class="bg-btn active" data-bg="dark">Dark</button>
+          <button type="button" class="bg-btn" data-bg="light">Light</button>
+          <button type="button" class="bg-btn" data-bg="checker">Checker</button>
+        </div>
+        <div class="color-preview" aria-label="Current crosshair color">
+          <span class="toolbar-label">Color</span>
+          <span id="color-swatch" class="color-swatch"></span>
+        </div>
+      </div>
+
+      <div class="canvas-wrap">
+        <canvas id="preview-canvas" width="320" height="320" aria-label="Crosshair preview canvas"></canvas>
+      </div>
+
+      <p id="style-note" class="preview-note" hidden>
+        Dynamic styles expand while moving or shooting in-game. This preview shows the static frame only.
+      </p>
+      <p class="preview-note muted">
+        Recoil follow, weapon gap, and sniper scope behavior are not simulated in this preview.
+      </p>
+    </section>
+
+    <section class="controls-panel" aria-label="Crosshair settings">
+      <div id="settings-container" class="settings-container"></div>
+
+      <div class="commands-panel">
+        <div class="commands-header">
+          <h2>Console commands</h2>
+          <div class="action-buttons">
+            <button type="button" id="copy-btn" class="btn btn-primary">Copy commands</button>
+            <button type="button" id="share-btn" class="btn">Share link</button>
+            <button type="button" id="reset-btn" class="btn btn-ghost">Reset</button>
+          </div>
+        </div>
+        <label class="sr-only" for="command-output">Generated crosshair console commands</label>
+        <textarea
+          id="command-output"
+          class="command-output"
+          readonly
+          rows="8"
+          aria-live="polite"
+        ></textarea>
+        <p class="commands-hint">
+          Open CS2, press <kbd>~</kbd> to open the console, paste the commands, and press Enter.
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="js/crosshair-settings.js"></script>
+  <script src="js/crosshair-renderer.js"></script>
+  <script src="js/commands.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
