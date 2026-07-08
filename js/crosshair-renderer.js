@@ -134,34 +134,34 @@ const CrosshairRenderer = (() => {
     }
   }
 
-  function drawRect(ctx, rect, color, offsetX, offsetY) {
-    const w = rect.x1 - rect.x0;
-    const h = rect.y1 - rect.y0;
+  function drawRect(ctx, rect, color, scale) {
+    const w = (rect.x1 - rect.x0) * scale;
+    const h = (rect.y1 - rect.y0) * scale;
     if (w <= 0 || h <= 0) return;
 
     ctx.fillStyle = `rgba(${color.r}, ${color.g}, ${color.b}, ${color.a})`;
-    ctx.fillRect(rect.x0 + offsetX, rect.y0 + offsetY, w, h);
+    ctx.fillRect(rect.x0 * scale, rect.y0 * scale, w, h);
   }
 
-  function drawOutline(ctx, rect, pad, offsetX, offsetY) {
+  function drawOutline(ctx, rect, pad, scale) {
     drawRect(ctx, {
       x0: rect.x0 - pad,
       y0: rect.y0 - pad,
       x1: rect.x1 + pad,
       y1: rect.y1 + pad,
-    }, { r: 0, g: 0, b: 0, a: 1 }, offsetX, offsetY);
+    }, { r: 0, g: 0, b: 0, a: 1 }, scale);
   }
 
-  function drawPart(ctx, rect, color, drawOutlineEnabled, outlinePad, offsetX, offsetY) {
-    if (drawOutlineEnabled) drawOutline(ctx, rect, outlinePad, offsetX, offsetY);
-    drawRect(ctx, rect, color, offsetX, offsetY);
+  function drawPart(ctx, rect, color, drawOutlineEnabled, outlinePad, scale) {
+    if (drawOutlineEnabled) drawOutline(ctx, rect, outlinePad, scale);
+    drawRect(ctx, rect, color, scale);
   }
 
-  function drawArm(ctx, arm, color, drawOutlineEnabled, outlinePad, offsetX, offsetY, dynamic) {
+  function drawArm(ctx, arm, color, drawOutlineEnabled, outlinePad, scale, dynamic) {
     const { style, factor, splitDist, splitRatio, innerAlphaMod, outerAlphaMod } = dynamic;
 
     if (style !== 2 || factor <= 0) {
-      drawPart(ctx, arm, color, drawOutlineEnabled, outlinePad, offsetX, offsetY);
+      drawPart(ctx, arm, color, drawOutlineEnabled, outlinePad, scale);
       return;
     }
 
@@ -174,8 +174,7 @@ const CrosshairRenderer = (() => {
       withAlpha(color, innerAlphaMod),
       drawOutlineEnabled,
       outlinePad,
-      offsetX,
-      offsetY,
+      scale,
     );
 
     if (outer && splitRatio < 1) {
@@ -185,8 +184,7 @@ const CrosshairRenderer = (() => {
         withAlpha(color, outerAlphaMod),
         drawOutlineEnabled,
         outlinePad,
-        offsetX,
-        offsetY,
+        scale,
       );
     }
   }
@@ -296,8 +294,7 @@ const CrosshairRenderer = (() => {
   }
 
   function drawCrosshair(ctx, displaySize, state, background, dynamicFactor = 0) {
-    const offsetX = Math.floor((displaySize - INTERNAL_SIZE) / 2);
-    const offsetY = Math.floor((displaySize - INTERNAL_SIZE) / 2);
+    const scale = displaySize / INTERNAL_SIZE;
     const centerX = Math.floor(INTERNAL_SIZE / 2);
     const centerY = Math.floor(INTERNAL_SIZE / 2);
 
@@ -327,13 +324,13 @@ const CrosshairRenderer = (() => {
     const arms = computeArms(dot, gap, size);
 
     if (showDot) {
-      drawPart(ctx, dot, color, drawOutlineEnabled, outlinePad, offsetX, offsetY);
+      drawPart(ctx, dot, color, drawOutlineEnabled, outlinePad, scale);
     }
 
     if (size !== 0) {
       for (const arm of arms) {
         if (tShape && arm.side === 'top') continue;
-        drawArm(ctx, arm, color, drawOutlineEnabled, outlinePad, offsetX, offsetY, dynamic);
+        drawArm(ctx, arm, color, drawOutlineEnabled, outlinePad, scale, dynamic);
       }
     }
   }
