@@ -9,6 +9,7 @@
   let previewBackground = 'dark';
   let previewZoom = PreviewZoom.DEFAULT;
   let previewMode = PreviewMode.DEFAULT_MODE;
+  let customPresets = [];
   let colorTheme = 'system';
   let suppressPersist = false;
 
@@ -30,6 +31,12 @@
     previewModeRoot: document.querySelector('.preview-mode'),
     bgToggleRoot: document.getElementById('bg-toggle-root'),
     presetsGrid: document.getElementById('presets-grid'),
+    customPresetsGrid: document.getElementById('custom-presets-grid'),
+    customPresetsEmpty: document.getElementById('custom-presets-empty'),
+    savePresetBtn: document.getElementById('save-preset-btn'),
+    savePresetForm: document.getElementById('save-preset-form'),
+    savePresetName: document.getElementById('save-preset-name'),
+    savePresetCancel: document.getElementById('save-preset-cancel'),
     themeToggle: document.getElementById('theme-toggle'),
   };
 
@@ -344,28 +351,122 @@
     showToast(`Loaded ${preset.label}`);
   }
 
-  function buildPresetsUI() {
+  function createPresetLoadButton(preset, subtitle) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'preset-btn';
+    btn.setAttribute('role', 'listitem');
+    btn.setAttribute('aria-label', `Load ${preset.label} crosshair`);
+
+    const name = document.createElement('span');
+    name.className = 'preset-name';
+    name.textContent = preset.label;
+
+    btn.append(name);
+
+    if (subtitle) {
+      const meta = document.createElement('span');
+      meta.className = 'preset-team';
+      meta.textContent = subtitle;
+      btn.append(meta);
+    }
+
+    btn.addEventListener('click', () => applyPreset(preset));
+    return btn;
+  }
+
+  function buildProPresetsUI() {
     els.presetsGrid.replaceChildren();
 
     for (const preset of CrosshairPresets.PRESETS) {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'preset-btn';
-      btn.setAttribute('role', 'listitem');
-      btn.setAttribute('aria-label', `Load ${preset.label} crosshair`);
-
-      const name = document.createElement('span');
-      name.className = 'preset-name';
-      name.textContent = preset.label;
-
-      const team = document.createElement('span');
-      team.className = 'preset-team';
-      team.textContent = preset.team;
-
-      btn.append(name, team);
-      btn.addEventListener('click', () => applyPreset(preset));
-      els.presetsGrid.append(btn);
+      els.presetsGrid.append(createPresetLoadButton(preset, preset.team));
     }
+  }
+
+  function buildCustomPresetsUI() {
+    const hasPresets = customPresets.length > 0;
+    els.customPresetsEmpty.hidden = hasPresets;
+    els.customPresetsGrid.hidden = !hasPresets;
+    els.customPresetsGrid.replaceChildren();
+
+    for (const preset of customPresets) {
+      const card = document.createElement('div');
+      card.className = 'preset-card';
+      card.setAttribute('role', 'listitem');
+
+      const loadBtn = createPresetLoadButton(preset);
+      const deleteBtn = document.createElement('button');
+      deleteBtn.type = 'button';
+      deleteBtn.className = 'preset-delete-btn';
+      deleteBtn.setAttribute('aria-label', `Delete ${preset.label}`);
+      deleteBtn.textContent = '×';
+      deleteBtn.addEventListener('click', (event) => {
+        event.stopPropagation();
+        deleteCustomPreset(preset.id);
+      });
+
+      card.append(loadBtn, deleteBtn);
+      els.customPresetsGrid.append(card);
+    }
+  }
+
+  function buildPresetsUI() {
+    buildProPresetsUI();
+    buildCustomPresetsUI();
+  }
+
+  function showSavePresetForm() {
+    els.savePresetForm.hidden = false;
+    els.savePresetBtn.hidden = true;
+    els.savePresetName.value = '';
+    els.savePresetName.focus();
+  }
+
+  function hideSavePresetForm() {
+    els.savePresetForm.hidden = true;
+    els.savePresetBtn.hidden = false;
+    els.savePresetName.value = '';
+  }
+
+  function saveCurrentPreset(name) {
+    const label = CustomPresets.sanitizeLabel(name);
+    if (!label) {
+      showToast('Enter a preset name');
+      return;
+    }
+
+    const existing = CustomPresets.findByLabel(customPresets, label);
+    const nextPresets = CustomPresets.upsertPreset(customPresets, label, crosshairState);
+
+    if (!nextPresets) {
+      showToast(`Maximum ${CustomPresets.MAX_PRESETS} presets`);
+      return;
+    }
+
+    customPresets = nextPresets;
+    hideSavePresetForm();
+    buildCustomPresetsUI();
+    if (!suppressPersist) persistState();
+    showToast(existing ? `Updated ${label}` : `Saved ${label}`);
+  }
+
+  function deleteCustomPreset(id) {
+    const preset = customPresets.find((item) => item.id === id);
+    if (!preset) return;
+
+    customPresets = CustomPresets.removePreset(customPresets, id);
+    buildCustomPresetsUI();
+    if (!suppressPersist) persistState();
+    showToast(`Deleted ${preset.label}`);
+  }
+
+  function initCustomPresets() {
+    els.savePresetBtn?.addEventListener('click', showSavePresetForm);
+    els.savePresetCancel?.addEventListener('click', hideSavePresetForm);
+    els.savePresetForm?.addEventListener('submit', (event) => {
+      event.preventDefault();
+      saveCurrentPreset(els.savePresetName.value);
+    });
   }
 
   function buildSettingsUI() {
@@ -459,6 +560,11 @@
         loaded = true;
       }
 
+      if (parsed?.customPresets) {
+        customPresets = CustomPresets.parseList(parsed.customPresets);
+        loaded = true;
+      }
+
       if (parsed?.theme === 'system' || parsed?.theme === 'light' || parsed?.theme === 'dark') {
         colorTheme = parsed.theme;
         loaded = true;
@@ -477,6 +583,7 @@
         previewBackground,
         previewZoom,
         previewMode,
+        customPresets,
         theme: colorTheme,
       }));
       const url = new URL(window.location.href);
@@ -686,6 +793,7 @@
     initThemeToggle();
     initPreviewZoom();
     initPreviewMode();
+    initCustomPresets();
     buildPresetsUI();
     buildSettingsUI();
     buildBackgroundToggles();

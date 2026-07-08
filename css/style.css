@@ -407,6 +407,102 @@ body {
   font-weight: 600;
 }
 
+.presets-section + .presets-section {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.presets-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.65rem;
+}
+
+.presets-section-header .presets-heading {
+  margin: 0;
+}
+
+.save-preset-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.65rem;
+}
+
+.save-preset-input {
+  flex: 1 1 8rem;
+  min-width: 0;
+  padding: 0.4rem 0.55rem;
+  font: inherit;
+  font-size: 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface-raised);
+  color: var(--text);
+}
+
+.save-preset-input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.custom-presets-empty {
+  margin: 0;
+  font-size: 0.8rem;
+}
+
+.custom-presets-empty[hidden],
+.custom-presets-section .presets-grid[hidden] {
+  display: none;
+}
+
+.preset-card {
+  position: relative;
+  min-width: 0;
+}
+
+.preset-card .preset-btn {
+  width: 100%;
+  padding-right: 1.5rem;
+}
+
+.preset-delete-btn {
+  position: absolute;
+  top: 0.2rem;
+  right: 0.2rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  padding: 0;
+  font-size: 0.95rem;
+  line-height: 1;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s, background 0.15s;
+}
+
+.preset-card:hover .preset-delete-btn,
+.preset-card:focus-within .preset-delete-btn {
+  opacity: 1;
+}
+
+.preset-delete-btn:hover {
+  color: var(--text);
+  background: var(--surface-raised);
+}
+
+.btn-compact {
+  padding: 0.3rem 0.65rem;
+  font-size: 0.8rem;
+}
+
 .presets-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));

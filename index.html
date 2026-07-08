@@ -74,8 +74,33 @@
       </p>
 
       <div class="presets-panel">
-        <h2 class="presets-heading">Pro presets</h2>
-        <div id="presets-grid" class="presets-grid" role="list"></div>
+        <div class="presets-section">
+          <h2 class="presets-heading">Pro presets</h2>
+          <div id="presets-grid" class="presets-grid" role="list"></div>
+        </div>
+
+        <div class="presets-section custom-presets-section">
+          <div class="presets-section-header">
+            <h2 class="presets-heading">My presets</h2>
+            <button type="button" id="save-preset-btn" class="btn btn-compact">Save current</button>
+          </div>
+          <form id="save-preset-form" class="save-preset-form" hidden>
+            <label class="sr-only" for="save-preset-name">Preset name</label>
+            <input
+              type="text"
+              id="save-preset-name"
+              class="save-preset-input"
+              placeholder="Preset name"
+              maxlength="24"
+              autocomplete="off"
+              required
+            >
+            <button type="submit" class="btn btn-primary btn-compact">Save</button>
+            <button type="button" id="save-preset-cancel" class="btn btn-compact">Cancel</button>
+          </form>
+          <p id="custom-presets-empty" class="custom-presets-empty muted">No saved presets yet.</p>
+          <div id="custom-presets-grid" class="presets-grid" role="list" hidden></div>
+        </div>
       </div>
     </section>
 
@@ -110,6 +135,7 @@
 
   <script src="js/crosshair-settings.js"></script>
   <script src="js/presets.js"></script>
+  <script src="js/custom-presets.js"></script>
   <script src="js/backgrounds.js"></script>
   <script src="js/preview-zoom.js"></script>
   <script src="js/preview-mode.js"></script>
