@@ -4,6 +4,7 @@
  */
 const CrosshairRenderer = (() => {
   const INTERNAL_SIZE = 64;
+  const PREVIEW_SIZE = 512;
   const ANIMATION_CYCLE_MS = 1800;
 
   const PRESET_COLORS = {
@@ -294,12 +295,17 @@ const CrosshairRenderer = (() => {
   }
 
   function drawCrosshair(ctx, displaySize, state, background, dynamicFactor = 0) {
-    const scale = displaySize / INTERNAL_SIZE;
+    const scale = 1;
+    const offsetX = Math.floor((displaySize - INTERNAL_SIZE) / 2);
+    const offsetY = Math.floor((displaySize - INTERNAL_SIZE) / 2);
     const centerX = Math.floor(INTERNAL_SIZE / 2);
     const centerY = Math.floor(INTERNAL_SIZE / 2);
 
     ctx.clearRect(0, 0, displaySize, displaySize);
     drawBackground(ctx, displaySize, displaySize, background);
+
+    ctx.save();
+    ctx.translate(offsetX, offsetY);
 
     const color = resolveColor(state);
     const thickness = state.cl_crosshairthickness;
@@ -333,6 +339,8 @@ const CrosshairRenderer = (() => {
         drawArm(ctx, arm, color, drawOutlineEnabled, outlinePad, scale, dynamic);
       }
     }
+
+    ctx.restore();
   }
 
   /**
@@ -387,5 +395,6 @@ const CrosshairRenderer = (() => {
     startAnimation,
     stopAnimation,
     INTERNAL_SIZE,
+    PREVIEW_SIZE,
   };
 })();

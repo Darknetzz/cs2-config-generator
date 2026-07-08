@@ -347,10 +347,17 @@
     }
   }
 
+  function initPreviewCanvas() {
+    const size = CrosshairRenderer.PREVIEW_SIZE;
+    els.previewCanvas.width = size;
+    els.previewCanvas.height = size;
+  }
+
   function init() {
     const fromUrl = loadFromUrl();
     if (!fromUrl) loadFromStorage();
 
+    initPreviewCanvas();
     buildSettingsUI();
     buildBackgroundToggles();
 
