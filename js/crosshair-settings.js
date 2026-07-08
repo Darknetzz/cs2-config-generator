@@ -101,7 +101,7 @@ const CROSSHAIR_SETTINGS = {
     ],
   },
   cl_crosshairsize: {
-    label: 'Size',
+    label: 'Length',
     description: 'Length of the crosshair lines.',
     type: 'range',
     default: 2.5,
