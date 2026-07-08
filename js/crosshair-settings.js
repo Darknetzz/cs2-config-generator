@@ -29,6 +29,7 @@ const CROSSHAIR_GROUPS = [
   {
     id: 'outline',
     label: 'Outline',
+    headerToggle: 'cl_crosshair_drawoutline',
     settings: [
       'cl_crosshair_drawoutline',
       'cl_crosshair_outlinethickness',

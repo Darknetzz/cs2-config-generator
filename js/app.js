@@ -197,13 +197,27 @@
       section.open = group.id === 'shape' || group.id === 'color';
 
       const summary = document.createElement('summary');
-      summary.textContent = group.label;
+      const summaryLabel = document.createElement('span');
+      summaryLabel.className = 'summary-label';
+      summaryLabel.textContent = group.label;
+      summary.append(summaryLabel);
+
+      const headerToggleKey = group.headerToggle;
+      if (headerToggleKey) {
+        const toggle = createToggleControl(headerToggleKey);
+        toggle.classList.add('summary-toggle');
+        toggle.addEventListener('click', (e) => e.stopPropagation());
+        toggle.addEventListener('mousedown', (e) => e.stopPropagation());
+        summary.append(toggle);
+      }
+
       section.append(summary);
 
       const body = document.createElement('div');
       body.className = 'settings-group-body';
 
       for (const key of group.settings) {
+        if (key === headerToggleKey) continue;
         body.append(createSettingRow(key));
       }
 

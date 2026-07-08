@@ -251,6 +251,16 @@ body {
   gap: 0.5rem;
 }
 
+.settings-group summary .summary-label {
+  flex: 1;
+  min-width: 0;
+}
+
+.summary-toggle {
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
 .settings-group summary::-webkit-details-marker {
   display: none;
 }
