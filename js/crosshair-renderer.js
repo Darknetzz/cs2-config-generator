@@ -544,12 +544,16 @@ const CrosshairRenderer = (() => {
     ctx.restore();
   }
 
+  function getSniperCrosshairColor() {
+    return { r: 255, g: 255, b: 255, a: 1 };
+  }
+
   function drawSniperScope(ctx, width, height, state) {
     const cx = width / 2;
     const cy = height / 2;
     const radius = Math.min(width, height) * 0.42;
     const lineWidth = Math.max(1, state.cl_crosshair_sniper_width * (height / PREVIEW_SIZE) * 8);
-    const color = resolveColor(state);
+    const color = getSniperCrosshairColor();
 
     ctx.save();
 
@@ -603,7 +607,6 @@ const CrosshairRenderer = (() => {
 
     if (mode === PreviewMode.MODES.SNIPER) {
       drawSniperScope(ctx, width, height, state);
-      drawUserCrosshair(ctx, width, height, state, 0);
       return;
     }
 
