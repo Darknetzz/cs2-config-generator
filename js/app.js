@@ -209,6 +209,24 @@
     return select;
   }
 
+  function resetSetting(key) {
+    crosshairState[key] = CROSSHAIR_SETTINGS[key].default;
+    syncControlsFromState();
+    refresh();
+    showToast(`${CROSSHAIR_SETTINGS[key].label} reset`);
+  }
+
+  function createResetButton(key) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'setting-reset-btn';
+    btn.title = 'Reset to default';
+    btn.setAttribute('aria-label', `Reset ${CROSSHAIR_SETTINGS[key].label} to default`);
+    btn.textContent = '↺';
+    btn.addEventListener('click', () => resetSetting(key));
+    return btn;
+  }
+
   function createSettingRow(key) {
     const meta = CROSSHAIR_SETTINGS[key];
     const row = document.createElement('div');
@@ -251,8 +269,15 @@
         : createSelectControl(key, meta);
     }
 
-    row.append(labelWrap, control);
+    row.append(labelWrap, wrapSettingControl(key, control));
     return row;
+  }
+
+  function wrapSettingControl(key, control) {
+    const wrap = document.createElement('div');
+    wrap.className = 'setting-control-wrap';
+    wrap.append(control, createResetButton(key));
+    return wrap;
   }
 
   function applyPreset(preset) {
@@ -304,7 +329,11 @@
         toggle.classList.add('summary-toggle');
         toggle.addEventListener('click', (e) => e.stopPropagation());
         toggle.addEventListener('mousedown', (e) => e.stopPropagation());
-        summary.append(toggle);
+        const resetBtn = createResetButton(headerToggleKey);
+        resetBtn.classList.add('summary-reset-btn');
+        resetBtn.addEventListener('click', (e) => e.stopPropagation());
+        resetBtn.addEventListener('mousedown', (e) => e.stopPropagation());
+        summary.append(toggle, resetBtn);
       }
 
       section.append(summary);
@@ -322,6 +351,14 @@
     }
   }
 
+  function applyCrosshairState(state) {
+    for (const key of CROSSHAIR_CVAR_ORDER) {
+      if (key in state) {
+        crosshairState[key] = clampSettingValue(key, state[key]);
+      }
+    }
+  }
+
   function loadFromUrl() {
     const params = new URLSearchParams(window.location.search);
     const encoded = params.get(URL_PARAM);
@@ -330,7 +367,7 @@
     const parsed = CrosshairCommands.fromUrlParam(encoded);
     if (!parsed) return false;
 
-    crosshairState = parsed;
+    applyCrosshairState(parsed);
     return true;
   }
 
@@ -340,12 +377,22 @@
       if (!raw) return false;
 
       const parsed = JSON.parse(raw);
-      for (const key of CROSSHAIR_CVAR_ORDER) {
-        if (key in parsed) {
-          crosshairState[key] = clampSettingValue(key, parsed[key]);
-        }
+      let loaded = false;
+
+      if (parsed?.crosshair && typeof parsed.crosshair === 'object') {
+        applyCrosshairState(parsed.crosshair);
+        loaded = true;
+      } else if (parsed && typeof parsed === 'object' && 'cl_crosshairstyle' in parsed) {
+        applyCrosshairState(parsed);
+        loaded = true;
       }
-      return true;
+
+      if (parsed?.previewBackground && Backgrounds.isValidId(parsed.previewBackground)) {
+        previewBackground = parsed.previewBackground;
+        loaded = true;
+      }
+
+      return loaded;
     } catch {
       return false;
     }
@@ -353,7 +400,10 @@
 
   function persistState() {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(crosshairState));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        crosshair: crosshairState,
+        previewBackground,
+      }));
       const url = new URL(window.location.href);
       url.searchParams.set(URL_PARAM, CrosshairCommands.toUrlParam(crosshairState));
       window.history.replaceState(null, '', url.toString());
@@ -391,7 +441,11 @@
 
   function resetToDefaults() {
     crosshairState = createDefaultCrosshairState();
+    previewBackground = Backgrounds.DEFAULT_ID;
     syncControlsFromState();
+    els.bgToggleRoot.querySelectorAll('[data-bg]').forEach((btn) => {
+      btn.classList.toggle('active', btn.dataset.bg === previewBackground);
+    });
     refresh();
     showToast('Reset to defaults');
   }
@@ -427,6 +481,7 @@
       btn.classList.toggle('active', btn.dataset.bg === id);
     });
     updatePreview();
+    if (!suppressPersist) persistState();
   }
 
   function buildBackgroundToggles() {
@@ -468,8 +523,8 @@
   }
 
   function init() {
-    const fromUrl = loadFromUrl();
-    if (!fromUrl) loadFromStorage();
+    loadFromStorage();
+    loadFromUrl();
 
     initPreviewCanvas();
     buildPresetsUI();
