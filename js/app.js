@@ -83,7 +83,16 @@
     for (const key of CROSSHAIR_CVAR_ORDER) {
       const row = document.querySelector(`[data-setting="${key}"]`);
       if (!row) continue;
+
+      const meta = CROSSHAIR_SETTINGS[key];
       const enabled = isSettingEnabled(key, crosshairState);
+
+      if (meta.hideWhenDisabled) {
+        row.hidden = !enabled;
+        continue;
+      }
+
+      row.hidden = false;
       row.classList.toggle('disabled', !enabled);
       row.querySelectorAll('input, select').forEach((input) => {
         input.disabled = !enabled;

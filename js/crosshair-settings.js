@@ -162,6 +162,7 @@ const CROSSHAIR_SETTINGS = {
     max: 255,
     step: 1,
     enabledWhen: { key: 'cl_crosshaircolor', value: 5 },
+    hideWhenDisabled: true,
   },
   cl_crosshaircolor_g: {
     label: 'Green',
@@ -172,6 +173,7 @@ const CROSSHAIR_SETTINGS = {
     max: 255,
     step: 1,
     enabledWhen: { key: 'cl_crosshaircolor', value: 5 },
+    hideWhenDisabled: true,
   },
   cl_crosshaircolor_b: {
     label: 'Blue',
@@ -182,6 +184,7 @@ const CROSSHAIR_SETTINGS = {
     max: 255,
     step: 1,
     enabledWhen: { key: 'cl_crosshaircolor', value: 5 },
+    hideWhenDisabled: true,
   },
   cl_crosshairusealpha: {
     label: 'Use alpha',
