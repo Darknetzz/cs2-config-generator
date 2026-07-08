@@ -409,7 +409,7 @@ const CrosshairRenderer = (() => {
     drawRulerSegment(ctx, cx, cy + gap, cx, height - pad, false, tickSpacing, tickScale);
   }
 
-  function drawLineupDisabledOverlay(ctx, width, height, grenadeLabel) {
+  function drawLineupDisabledOverlay(ctx, width, height) {
     ctx.save();
     ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
     ctx.fillRect(0, 0, width, height);
@@ -418,7 +418,7 @@ const CrosshairRenderer = (() => {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.font = `600 ${Math.max(14, Math.round(width * 0.028))}px system-ui, sans-serif`;
-    ctx.fillText(`${grenadeLabel} lineup reticle disabled`, width / 2, height / 2);
+    ctx.fillText('Lineup reticle disabled for all grenades', width / 2, height / 2);
     ctx.restore();
   }
 
@@ -426,21 +426,18 @@ const CrosshairRenderer = (() => {
     const mode = PreviewMode.isValidMode(options.mode)
       ? options.mode
       : PreviewMode.DEFAULT_MODE;
-    const grenadeType = PreviewMode.isValidGrenadeType(options.grenadeType)
-      ? options.grenadeType
-      : PreviewMode.DEFAULT_GRENADE_TYPE;
 
-    return { mode, grenadeType };
+    return { mode };
   }
 
   function drawPreview(ctx, width, height, state, background, dynamicFactor = 0, options = {}) {
-    const { mode, grenadeType } = normalizeRenderOptions(options);
+    const { mode } = normalizeRenderOptions(options);
 
     ctx.clearRect(0, 0, width, height);
     drawBackground(ctx, width, height, background);
 
     if (mode === PreviewMode.MODES.LINEUP) {
-      const enabled = PreviewMode.isGrenadeTypeEnabled(state, grenadeType);
+      const enabled = PreviewMode.isLineupEnabled(state);
 
       if (enabled) {
         if (state.cl_grenadecrosshair_keepusercrosshair === 1) {
@@ -451,12 +448,7 @@ const CrosshairRenderer = (() => {
       }
 
       drawUserCrosshair(ctx, width, height, state, dynamicFactor);
-      drawLineupDisabledOverlay(
-        ctx,
-        width,
-        height,
-        PreviewMode.getGrenadeTypeLabel(grenadeType),
-      );
+      drawLineupDisabledOverlay(ctx, width, height);
       return;
     }
 
@@ -473,7 +465,7 @@ const CrosshairRenderer = (() => {
    * @param {object} state - crosshair cvar state
    * @param {string} background - background id from Backgrounds config
    * @param {number} [dynamicFactor=0] - 0 = resting, 1 = full movement spread
-   * @param {object} [options] - preview options ({ mode, grenadeType })
+   * @param {object} [options] - preview options ({ mode })
    */
   function render(canvas, state, background = 'dark', dynamicFactor = 0, options = {}) {
     const ctx = canvas.getContext('2d');

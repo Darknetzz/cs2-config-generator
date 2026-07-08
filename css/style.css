@@ -276,21 +276,14 @@ body {
   flex-shrink: 0;
 }
 
-.preview-mode,
-.grenade-type-root {
+.preview-mode {
   display: flex;
   align-items: center;
   gap: 0.4rem;
   flex-shrink: 0;
 }
 
-.grenade-type-root {
-  flex: 1 1 100%;
-  min-width: 0;
-}
-
-.mode-toggle,
-.grenade-type-toggle {
+.mode-toggle {
   display: flex;
   flex-wrap: wrap;
   gap: 0.25rem;
@@ -306,11 +299,6 @@ body {
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s;
   white-space: nowrap;
-}
-
-.mode-btn-compact {
-  padding: 0.25rem 0.5rem;
-  font-size: 0.75rem;
 }
 
 .mode-btn:hover {
