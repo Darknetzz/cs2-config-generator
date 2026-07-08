@@ -11,6 +11,18 @@ const CrosshairRenderer = (() => {
   let animCanvas = null;
   let getStateFn = null;
   let getBackgroundFn = null;
+  let getOptionsFn = null;
+
+  const GRENADE_RETICLE = {
+    REF_HEIGHT: 1080,
+    TICK_INTERVAL: 10,
+    TICK_SCALING: 1.1,
+    CENTER_GAP: 14,
+    LINE_ALPHA: 0.88,
+    SMALL_TICK: 5,
+    LARGE_TICK: 10,
+    MAJOR_EVERY: 5,
+  };
 
   function isDynamicStyle(style) {
     return style === 0 || style === 2 || style === 3;
@@ -290,16 +302,13 @@ const CrosshairRenderer = (() => {
     return height / PREVIEW_SIZE;
   }
 
-  function drawCrosshair(ctx, width, height, state, background, dynamicFactor = 0) {
+  function drawUserCrosshair(ctx, width, height, state, dynamicFactor = 0) {
     const scale = getCrosshairScale(height);
     const drawSize = INTERNAL_SIZE * scale;
     const offsetX = Math.floor((width - drawSize) / 2);
     const offsetY = Math.floor((height - drawSize) / 2);
     const centerX = Math.floor(INTERNAL_SIZE / 2);
     const centerY = Math.floor(INTERNAL_SIZE / 2);
-
-    ctx.clearRect(0, 0, width, height);
-    drawBackground(ctx, width, height, background);
 
     ctx.save();
     ctx.translate(offsetX, offsetY);
@@ -340,16 +349,135 @@ const CrosshairRenderer = (() => {
     ctx.restore();
   }
 
+  function getGrenadeReticleScale(height) {
+    return (height / GRENADE_RETICLE.REF_HEIGHT) * GRENADE_RETICLE.TICK_SCALING;
+  }
+
+  function drawRulerSegment(ctx, x0, y0, x1, y1, horizontal, tickSpacing, tickScale) {
+    const { SMALL_TICK, LARGE_TICK, MAJOR_EVERY, LINE_ALPHA } = GRENADE_RETICLE;
+    const cx = (x0 + x1) / 2;
+    const cy = (y0 + y1) / 2;
+    const length = horizontal ? Math.abs(x1 - x0) : Math.abs(y1 - y0);
+    const lineW = Math.max(1, tickScale * 0.9);
+
+    ctx.strokeStyle = `rgba(255, 255, 255, ${LINE_ALPHA})`;
+    ctx.lineWidth = lineW;
+    ctx.beginPath();
+    ctx.moveTo(x0, y0);
+    ctx.lineTo(x1, y1);
+    ctx.stroke();
+
+    const smallTick = SMALL_TICK * tickScale;
+    const largeTick = LARGE_TICK * tickScale;
+
+    for (let dist = tickSpacing; dist <= length / 2; dist += tickSpacing) {
+      const tickIndex = Math.round(dist / tickSpacing);
+      const isMajor = tickIndex % MAJOR_EVERY === 0;
+      const tickLen = isMajor ? largeTick : smallTick;
+
+      if (horizontal) {
+        for (const sign of [-1, 1]) {
+          const x = cx + sign * dist;
+          ctx.beginPath();
+          ctx.moveTo(x, cy - tickLen / 2);
+          ctx.lineTo(x, cy + tickLen / 2);
+          ctx.stroke();
+        }
+      } else {
+        for (const sign of [-1, 1]) {
+          const y = cy + sign * dist;
+          ctx.beginPath();
+          ctx.moveTo(cx - tickLen / 2, y);
+          ctx.lineTo(cx + tickLen / 2, y);
+          ctx.stroke();
+        }
+      }
+    }
+  }
+
+  function drawGrenadeLineupReticle(ctx, width, height) {
+    const tickScale = getGrenadeReticleScale(height);
+    const gap = (GRENADE_RETICLE.CENTER_GAP / 2) * tickScale;
+    const tickSpacing = GRENADE_RETICLE.TICK_INTERVAL * tickScale;
+    const cx = width / 2;
+    const cy = height / 2;
+    const pad = Math.max(1, tickScale);
+
+    drawRulerSegment(ctx, pad, cy, cx - gap, cy, true, tickSpacing, tickScale);
+    drawRulerSegment(ctx, cx + gap, cy, width - pad, cy, true, tickSpacing, tickScale);
+    drawRulerSegment(ctx, cx, pad, cx, cy - gap, false, tickSpacing, tickScale);
+    drawRulerSegment(ctx, cx, cy + gap, cx, height - pad, false, tickSpacing, tickScale);
+  }
+
+  function drawLineupDisabledOverlay(ctx, width, height, grenadeLabel) {
+    ctx.save();
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
+    ctx.fillRect(0, 0, width, height);
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = `600 ${Math.max(14, Math.round(width * 0.028))}px system-ui, sans-serif`;
+    ctx.fillText(`${grenadeLabel} lineup reticle disabled`, width / 2, height / 2);
+    ctx.restore();
+  }
+
+  function normalizeRenderOptions(options = {}) {
+    const mode = PreviewMode.isValidMode(options.mode)
+      ? options.mode
+      : PreviewMode.DEFAULT_MODE;
+    const grenadeType = PreviewMode.isValidGrenadeType(options.grenadeType)
+      ? options.grenadeType
+      : PreviewMode.DEFAULT_GRENADE_TYPE;
+
+    return { mode, grenadeType };
+  }
+
+  function drawPreview(ctx, width, height, state, background, dynamicFactor = 0, options = {}) {
+    const { mode, grenadeType } = normalizeRenderOptions(options);
+
+    ctx.clearRect(0, 0, width, height);
+    drawBackground(ctx, width, height, background);
+
+    if (mode === PreviewMode.MODES.LINEUP) {
+      const enabled = PreviewMode.isGrenadeTypeEnabled(state, grenadeType);
+
+      if (enabled) {
+        if (state.cl_grenadecrosshair_keepusercrosshair === 1) {
+          drawUserCrosshair(ctx, width, height, state, dynamicFactor);
+        }
+        drawGrenadeLineupReticle(ctx, width, height);
+        return;
+      }
+
+      drawUserCrosshair(ctx, width, height, state, dynamicFactor);
+      drawLineupDisabledOverlay(
+        ctx,
+        width,
+        height,
+        PreviewMode.getGrenadeTypeLabel(grenadeType),
+      );
+      return;
+    }
+
+    drawUserCrosshair(ctx, width, height, state, dynamicFactor);
+  }
+
+  function drawCrosshair(ctx, width, height, state, background, dynamicFactor = 0) {
+    drawPreview(ctx, width, height, state, background, dynamicFactor);
+  }
+
   /**
    * Render crosshair onto canvas.
    * @param {HTMLCanvasElement} canvas
    * @param {object} state - crosshair cvar state
    * @param {string} background - background id from Backgrounds config
    * @param {number} [dynamicFactor=0] - 0 = resting, 1 = full movement spread
+   * @param {object} [options] - preview options ({ mode, grenadeType })
    */
-  function render(canvas, state, background = 'dark', dynamicFactor = 0) {
+  function render(canvas, state, background = 'dark', dynamicFactor = 0, options = {}) {
     const ctx = canvas.getContext('2d');
-    drawCrosshair(ctx, canvas.width, canvas.height, state, background, dynamicFactor);
+    drawPreview(ctx, canvas.width, canvas.height, state, background, dynamicFactor, options);
   }
 
   function animationLoop(timestamp) {
@@ -361,14 +489,21 @@ const CrosshairRenderer = (() => {
       return;
     }
 
-    render(animCanvas, state, getBackgroundFn(), getDynamicFactor(timestamp));
+    const options = getOptionsFn?.() ?? {};
+    if (options.mode === PreviewMode.MODES.LINEUP) {
+      stopAnimation();
+      return;
+    }
+
+    render(animCanvas, state, getBackgroundFn(), getDynamicFactor(timestamp), options);
     animFrameId = requestAnimationFrame(animationLoop);
   }
 
-  function startAnimation(canvas, getState, getBackground) {
+  function startAnimation(canvas, getState, getBackground, getOptions) {
     animCanvas = canvas;
     getStateFn = getState;
     getBackgroundFn = getBackground;
+    getOptionsFn = getOptions ?? null;
     if (isAnimating()) return;
     animFrameId = requestAnimationFrame(animationLoop);
   }
@@ -381,6 +516,7 @@ const CrosshairRenderer = (() => {
     animCanvas = null;
     getStateFn = null;
     getBackgroundFn = null;
+    getOptionsFn = null;
   }
 
   return {

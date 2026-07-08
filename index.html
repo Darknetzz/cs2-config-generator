@@ -40,6 +40,14 @@
     <section class="preview-panel" aria-label="Crosshair preview">
       <div class="preview-toolbar">
         <div id="bg-toggle-root" class="bg-toggle-root" aria-label="Preview background"></div>
+        <div class="preview-mode" role="group" aria-label="Preview mode">
+          <span class="toolbar-label">Preview</span>
+          <div class="mode-toggle">
+            <button type="button" class="mode-btn" data-mode="normal">Normal</button>
+            <button type="button" class="mode-btn" data-mode="lineup">Lineup</button>
+          </div>
+        </div>
+        <div id="grenade-type-root" class="grenade-type-root" hidden role="group" aria-label="Grenade type for lineup preview"></div>
         <div class="preview-zoom" role="group" aria-label="Preview zoom">
           <span class="toolbar-label">Zoom</span>
           <button type="button" id="zoom-out-btn" class="zoom-btn" aria-label="Zoom out">−</button>
@@ -58,6 +66,9 @@
 
       <p id="style-note" class="preview-note" hidden>
         Dynamic preview — crosshair expands as if you were moving or shooting in-game.
+      </p>
+      <p id="lineup-note" class="preview-note" hidden>
+        Grenade lineup reticle preview — shown after the pin delay, as if you were holding a grenade.
       </p>
       <p class="preview-note muted">
         Crosshair is shown at true in-game size (64×64 px at 1080p). Recoil follow, weapon gap, and sniper scope behavior are not simulated.
@@ -101,6 +112,7 @@
   <script src="js/presets.js"></script>
   <script src="js/backgrounds.js"></script>
   <script src="js/preview-zoom.js"></script>
+  <script src="js/preview-mode.js"></script>
   <script src="js/crosshair-renderer.js"></script>
   <script src="js/commands.js"></script>
   <script src="js/app.js"></script>

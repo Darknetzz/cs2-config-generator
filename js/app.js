@@ -8,6 +8,8 @@
   let crosshairState = createDefaultCrosshairState();
   let previewBackground = 'dark';
   let previewZoom = PreviewZoom.DEFAULT;
+  let previewMode = PreviewMode.DEFAULT_MODE;
+  let previewGrenadeType = PreviewMode.DEFAULT_GRENADE_TYPE;
   let colorTheme = 'system';
   let suppressPersist = false;
 
@@ -25,6 +27,9 @@
     toast: document.getElementById('toast'),
     colorSwatch: document.getElementById('color-swatch'),
     styleNote: document.getElementById('style-note'),
+    lineupNote: document.getElementById('lineup-note'),
+    previewModeRoot: document.querySelector('.preview-mode'),
+    grenadeTypeRoot: document.getElementById('grenade-type-root'),
     bgToggleRoot: document.getElementById('bg-toggle-root'),
     presetsGrid: document.getElementById('presets-grid'),
     themeToggle: document.getElementById('theme-toggle'),
@@ -37,9 +42,15 @@
     showToast._timer = setTimeout(() => els.toast.classList.remove('visible'), 2000);
   }
 
+  function getPreviewRenderOptions() {
+    return { mode: previewMode, grenadeType: previewGrenadeType };
+  }
+
   function updateStyleNote() {
-    const isDynamic = CrosshairRenderer.isDynamicStyle(crosshairState.cl_crosshairstyle);
+    const isLineup = previewMode === PreviewMode.MODES.LINEUP;
+    const isDynamic = !isLineup && CrosshairRenderer.isDynamicStyle(crosshairState.cl_crosshairstyle);
     els.styleNote.hidden = !isDynamic;
+    els.lineupNote.hidden = !isLineup;
   }
 
   function updateColorSwatch() {
@@ -54,17 +65,26 @@
   }
 
   function managePreviewAnimation() {
+    const options = getPreviewRenderOptions();
+
+    if (previewMode === PreviewMode.MODES.LINEUP) {
+      CrosshairRenderer.stopAnimation();
+      CrosshairRenderer.render(els.previewCanvas, crosshairState, previewBackground, 0, options);
+      return;
+    }
+
     if (CrosshairRenderer.isDynamicStyle(crosshairState.cl_crosshairstyle)) {
       CrosshairRenderer.startAnimation(
         els.previewCanvas,
         () => crosshairState,
         () => previewBackground,
+        getPreviewRenderOptions,
       );
       return;
     }
 
     CrosshairRenderer.stopAnimation();
-    CrosshairRenderer.render(els.previewCanvas, crosshairState, previewBackground);
+    CrosshairRenderer.render(els.previewCanvas, crosshairState, previewBackground, 0, options);
   }
 
   function updateCommands() {
@@ -77,6 +97,8 @@
     }
     return previewBackground === Backgrounds.DEFAULT_ID
       && previewZoom === PreviewZoom.DEFAULT
+      && previewMode === PreviewMode.DEFAULT_MODE
+      && previewGrenadeType === PreviewMode.DEFAULT_GRENADE_TYPE
       && colorTheme === 'system';
   }
 
@@ -435,6 +457,16 @@
         loaded = true;
       }
 
+      if (PreviewMode.isValidMode(parsed?.previewMode)) {
+        previewMode = parsed.previewMode;
+        loaded = true;
+      }
+
+      if (PreviewMode.isValidGrenadeType(parsed?.previewGrenadeType)) {
+        previewGrenadeType = parsed.previewGrenadeType;
+        loaded = true;
+      }
+
       if (parsed?.theme === 'system' || parsed?.theme === 'light' || parsed?.theme === 'dark') {
         colorTheme = parsed.theme;
         loaded = true;
@@ -452,6 +484,8 @@
         crosshair: crosshairState,
         previewBackground,
         previewZoom,
+        previewMode,
+        previewGrenadeType,
         theme: colorTheme,
       }));
       const url = new URL(window.location.href);
@@ -519,12 +553,15 @@
     crosshairState = createDefaultCrosshairState();
     previewBackground = Backgrounds.DEFAULT_ID;
     previewZoom = PreviewZoom.DEFAULT;
+    previewMode = PreviewMode.DEFAULT_MODE;
+    previewGrenadeType = PreviewMode.DEFAULT_GRENADE_TYPE;
     colorTheme = 'system';
     syncControlsFromState();
     els.bgToggleRoot.querySelectorAll('[data-bg]').forEach((btn) => {
       btn.classList.toggle('active', btn.dataset.bg === previewBackground);
     });
     applyPreviewZoom();
+    applyPreviewMode();
     setColorTheme(colorTheme);
     refresh();
     showToast('Reset to defaults');
@@ -590,6 +627,69 @@
     });
   }
 
+  function applyPreviewMode() {
+    els.previewModeRoot?.querySelectorAll('[data-mode]').forEach((btn) => {
+      btn.classList.toggle('active', btn.dataset.mode === previewMode);
+    });
+
+    const showGrenadeTypes = previewMode === PreviewMode.MODES.LINEUP;
+    if (els.grenadeTypeRoot) {
+      els.grenadeTypeRoot.hidden = !showGrenadeTypes;
+      els.grenadeTypeRoot.querySelectorAll('[data-grenade]').forEach((btn) => {
+        btn.classList.toggle('active', btn.dataset.grenade === previewGrenadeType);
+      });
+    }
+  }
+
+  function setPreviewMode(mode) {
+    if (!PreviewMode.isValidMode(mode)) return;
+    previewMode = mode;
+    applyPreviewMode();
+    updateResetAllButton();
+    updatePreview();
+    if (!suppressPersist) persistState();
+  }
+
+  function setPreviewGrenadeType(typeId) {
+    if (!PreviewMode.isValidGrenadeType(typeId)) return;
+    previewGrenadeType = typeId;
+    applyPreviewMode();
+    updateResetAllButton();
+    updatePreview();
+    if (!suppressPersist) persistState();
+  }
+
+  function initPreviewMode() {
+    els.previewModeRoot?.querySelectorAll('[data-mode]').forEach((btn) => {
+      btn.addEventListener('click', () => setPreviewMode(btn.dataset.mode));
+    });
+
+    if (els.grenadeTypeRoot) {
+      els.grenadeTypeRoot.replaceChildren();
+
+      const label = document.createElement('span');
+      label.className = 'toolbar-label';
+      label.textContent = 'Grenade';
+
+      const toggle = document.createElement('div');
+      toggle.className = 'grenade-type-toggle';
+
+      for (const type of PreviewMode.GRENADE_TYPES) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'mode-btn mode-btn-compact';
+        btn.dataset.grenade = type.id;
+        btn.textContent = type.label;
+        btn.addEventListener('click', () => setPreviewGrenadeType(type.id));
+        toggle.append(btn);
+      }
+
+      els.grenadeTypeRoot.append(label, toggle);
+    }
+
+    applyPreviewMode();
+  }
+
   function buildBackgroundToggles() {
     els.bgToggleRoot.replaceChildren();
 
@@ -635,6 +735,7 @@
     initPreviewCanvas();
     initThemeToggle();
     initPreviewZoom();
+    initPreviewMode();
     buildPresetsUI();
     buildSettingsUI();
     buildBackgroundToggles();
