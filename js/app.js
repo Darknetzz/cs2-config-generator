@@ -94,7 +94,34 @@
     }
   }
 
+  function getCanvasBaseSize() {
+    const width = els.canvasWrap?.clientWidth || CrosshairRenderer.PREVIEW_SIZE;
+    return Math.min(width, CrosshairRenderer.PREVIEW_SIZE);
+  }
+
+  function getCanvasDisplaySize() {
+    return Math.max(1, Math.round(getCanvasBaseSize() * previewZoom));
+  }
+
+  function syncCanvasDimensions() {
+    const canvas = els.previewCanvas;
+    if (!canvas) return;
+
+    const size = getCanvasDisplaySize();
+    const changed = canvas.width !== size || canvas.height !== size;
+
+    if (changed) {
+      canvas.width = size;
+      canvas.height = size;
+      CrosshairRenderer.invalidateBgCache();
+    }
+
+    canvas.style.width = `${size}px`;
+    canvas.style.height = `${size}px`;
+  }
+
   function updatePreview() {
+    syncCanvasDimensions();
     updateColorSwatch();
     updateStyleNote();
     updateLineupModeButton();
@@ -933,12 +960,13 @@
   }
 
   function applyPreviewZoom() {
-    els.canvasWrap?.style.setProperty('--preview-zoom', String(previewZoom));
     if (els.zoomLabel) {
       els.zoomLabel.textContent = `${Math.round(previewZoom * 100)}%`;
     }
     if (els.zoomInBtn) els.zoomInBtn.disabled = !PreviewZoom.canZoomIn(previewZoom);
     if (els.zoomOutBtn) els.zoomOutBtn.disabled = !PreviewZoom.canZoomOut(previewZoom);
+    syncCanvasDimensions();
+    updatePreview();
   }
 
   function setPreviewZoom(zoom) {
@@ -1028,9 +1056,16 @@
   }
 
   function initPreviewCanvas() {
-    const size = CrosshairRenderer.PREVIEW_SIZE;
-    els.previewCanvas.width = size;
-    els.previewCanvas.height = size;
+    const onLayoutChange = () => {
+      syncCanvasDimensions();
+      updatePreview();
+    };
+
+    if (typeof ResizeObserver !== 'undefined' && els.canvasWrap) {
+      new ResizeObserver(onLayoutChange).observe(els.canvasWrap);
+    }
+
+    window.addEventListener('resize', onLayoutChange);
   }
 
   function initKeyboardShortcuts() {

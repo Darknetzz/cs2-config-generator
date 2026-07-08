@@ -452,15 +452,11 @@ body {
   overflow: auto;
   border: 1px solid var(--border);
   scrollbar-width: thin;
-  --preview-zoom: 1;
 }
 
 #preview-canvas {
   display: block;
-  width: calc(100% * var(--preview-zoom));
   max-width: none;
-  height: auto;
-  aspect-ratio: 1 / 1;
   image-rendering: pixelated;
 }
 
