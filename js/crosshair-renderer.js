@@ -58,22 +58,22 @@ const CrosshairRenderer = (() => {
     ];
   }
 
-  function drawRect(ctx, rect, color, scale) {
-    const w = (rect.x1 - rect.x0) * scale;
-    const h = (rect.y1 - rect.y0) * scale;
+  function drawRect(ctx, rect, color, offsetX, offsetY) {
+    const w = rect.x1 - rect.x0;
+    const h = rect.y1 - rect.y0;
     if (w <= 0 || h <= 0) return;
 
     ctx.fillStyle = `rgba(${color.r}, ${color.g}, ${color.b}, ${color.a})`;
-    ctx.fillRect(rect.x0 * scale, rect.y0 * scale, w, h);
+    ctx.fillRect(rect.x0 + offsetX, rect.y0 + offsetY, w, h);
   }
 
-  function drawOutline(ctx, rect, pad, scale) {
+  function drawOutline(ctx, rect, pad, offsetX, offsetY) {
     drawRect(ctx, {
       x0: rect.x0 - pad,
       y0: rect.y0 - pad,
       x1: rect.x1 + pad,
       y1: rect.y1 + pad,
-    }, { r: 0, g: 0, b: 0, a: 1 }, scale);
+    }, { r: 0, g: 0, b: 0, a: 1 }, offsetX, offsetY);
   }
 
   function drawBackground(ctx, width, height, mode) {
@@ -115,7 +115,10 @@ const CrosshairRenderer = (() => {
   function render(canvas, state, background = 'dark') {
     const ctx = canvas.getContext('2d');
     const displaySize = canvas.width;
-    const scale = displaySize / INTERNAL_SIZE;
+    // In-game, the 64×64 crosshair coordinate space maps 1:1 to screen pixels.
+    // Center that region inside the larger preview canvas instead of stretching it.
+    const offsetX = Math.floor((displaySize - INTERNAL_SIZE) / 2);
+    const offsetY = Math.floor((displaySize - INTERNAL_SIZE) / 2);
     const centerX = Math.floor(INTERNAL_SIZE / 2);
     const centerY = Math.floor(INTERNAL_SIZE / 2);
 
@@ -136,16 +139,16 @@ const CrosshairRenderer = (() => {
 
     // Draw dot
     if (showDot) {
-      if (drawOutlineEnabled) drawOutline(ctx, dot, outlinePad, scale);
-      drawRect(ctx, dot, color, scale);
+      if (drawOutlineEnabled) drawOutline(ctx, dot, outlinePad, offsetX, offsetY);
+      drawRect(ctx, dot, color, offsetX, offsetY);
     }
 
     // Draw arms (skip if size is 0 and no visible length)
     if (size !== 0) {
       for (const arm of arms) {
         if (tShape && arm.side === 'top') continue;
-        if (drawOutlineEnabled) drawOutline(ctx, arm, outlinePad, scale);
-        drawRect(ctx, arm, color, scale);
+        if (drawOutlineEnabled) drawOutline(ctx, arm, outlinePad, offsetX, offsetY);
+        drawRect(ctx, arm, color, offsetX, offsetY);
       }
     }
   }
