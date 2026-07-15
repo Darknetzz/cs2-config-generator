@@ -241,7 +241,7 @@ const BindSection = (() => {
     if (entry.kind === 'package' && Array.isArray(entry.packageBinds)) {
       return entry.packageBinds.map((item) => formatBind(item.key, item.command));
     }
-    const key = normalizeKey(entryState.key) || entry.defaultKey;
+    const key = normalizeKey(entryState?.key) || entry.defaultKey;
     if (!key || !entry.bindCommand) return [];
     return [formatBind(key, entry.bindCommand)];
   }
