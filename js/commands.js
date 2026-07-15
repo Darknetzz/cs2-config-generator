@@ -1,9 +1,9 @@
 /**
- * Serialize crosshair state to CS2 console commands.
+ * Serialize multi-section config state to CS2 console / .cfg commands.
  */
-const CrosshairCommands = (() => {
-  function formatValue(key, value) {
-    const meta = CROSSHAIR_SETTINGS[key];
+const ConfigCommands = (() => {
+  function formatValue(section, key, value) {
+    const meta = section.SETTINGS[key];
     if (meta.type === 'toggle') {
       if (meta.consoleFormat === 'bool') return value ? 'true' : 'false';
       return value ? 1 : 0;
@@ -12,106 +12,222 @@ const CrosshairCommands = (() => {
     return String(value);
   }
 
+  function parseCommandValue(section, key, raw) {
+    const meta = section.SETTINGS[key];
+    const trimmed = String(raw).trim();
+
+    if (meta.type === 'toggle' && meta.consoleFormat === 'bool') {
+      if (trimmed === 'true') return 1;
+      if (trimmed === 'false') return 0;
+    }
+
+    return section.clamp(key, trimmed);
+  }
+
+  function keysForSection(section, state, minimal) {
+    return minimal
+      ? section.CVAR_ORDER.filter((key) => !section.isAtDefault(key, state))
+      : section.CVAR_ORDER;
+  }
+
+  function toSectionLines(section, state, options = {}) {
+    const keys = keysForSection(section, state, Boolean(options.minimal));
+    return keys.map((key) => `${key} ${formatValue(section, key, state[key])}`);
+  }
+
   /**
    * Build semicolon-separated console command string.
-   * @param {object} state
+   * @param {object} sectionsState
    * @param {object} [options]
-   * @param {boolean} [options.minimal=false] - only non-default cvars
-   * @returns {string}
+   * @param {boolean} [options.minimal=false]
+   * @param {string|null} [options.sectionId=null] - one section, or all when null
    */
-  function toCommandString(state, options = {}) {
-    const keys = options.minimal
-      ? CROSSHAIR_CVAR_ORDER.filter((key) => !isSettingAtDefault(key, state))
-      : CROSSHAIR_CVAR_ORDER;
+  function toCommandString(sectionsState, options = {}) {
+    const sections = options.sectionId
+      ? [ConfigSections.get(options.sectionId)].filter(Boolean)
+      : ConfigSections.ALL;
 
-    return keys
-      .map((key) => `${key} ${formatValue(key, state[key])}`)
+    return sections
+      .flatMap((section) => toSectionLines(section, sectionsState[section.id] || {}, options))
       .join('; ');
   }
 
   /**
-   * Build multi-line version for readability in textarea.
-   * @param {object} state
+   * Build multi-line commands for the textarea.
+   * @param {object} sectionsState
    * @param {object} [options]
    * @param {boolean} [options.minimal=false]
-   * @returns {string}
+   * @param {boolean} [options.comments=true]
+   * @param {string|null} [options.sectionId=null]
    */
-  function toMultilineString(state, options = {}) {
-    const keys = options.minimal
-      ? CROSSHAIR_CVAR_ORDER.filter((key) => !isSettingAtDefault(key, state))
-      : CROSSHAIR_CVAR_ORDER;
+  function toMultilineString(sectionsState, options = {}) {
+    const withComments = options.comments !== false;
+    const sections = options.sectionId
+      ? [ConfigSections.get(options.sectionId)].filter(Boolean)
+      : ConfigSections.ALL;
 
-    return keys
-      .map((key) => `${key} ${formatValue(key, state[key])}`)
-      .join('\n');
+    const blocks = [];
+    for (const section of sections) {
+      const lines = toSectionLines(section, sectionsState[section.id] || {}, options);
+      if (!lines.length) continue;
+
+      if (withComments && !options.sectionId) {
+        blocks.push(`// --- ${section.label} ---`, ...lines);
+      } else {
+        blocks.push(...lines);
+      }
+    }
+
+    return blocks.join('\n');
   }
 
   /**
-   * Parse a console command string into crosshair state.
+   * Parse console / cfg text into a partial multi-section patch (unknown lines skipped).
+   * Only includes cvars that were present in the input so callers can merge without resetting others.
    * @param {string} text
-   * @returns {{ state: object, parsed: number, skipped: number }}
+   * @returns {{ sections: object, parsed: number, skipped: number }}
    */
   function fromCommandString(text) {
-    const state = createDefaultCrosshairState();
-    const known = new Set(CROSSHAIR_CVAR_ORDER);
+    const sections = {};
     let parsed = 0;
     let skipped = 0;
 
     for (const line of String(text).split(/[;\n]+/)) {
       const trimmed = line.trim();
       if (!trimmed) continue;
+      if (trimmed.startsWith('//') || trimmed.startsWith('#')) continue;
 
-      const match = trimmed.match(/^(cl_\S+)\s+(.+)$/);
+      const match = trimmed.match(/^([A-Za-z_][\w]*)\s+(.+)$/);
       if (!match) {
         skipped += 1;
         continue;
       }
 
       const key = match[1];
-      if (!known.has(key)) {
+      const section = ConfigSections.findSectionForCvar(key);
+      if (!section) {
         skipped += 1;
         continue;
       }
 
-      state[key] = parseCommandValue(key, match[2]);
+      if (!sections[section.id]) sections[section.id] = {};
+      sections[section.id][key] = parseCommandValue(section, key, match[2]);
       parsed += 1;
     }
 
-    return { state, parsed, skipped };
+    return { sections, parsed, skipped };
   }
 
-  function parseCommandValue(key, raw) {
-    const meta = CROSSHAIR_SETTINGS[key];
-    const trimmed = String(raw).trim();
+  function toSectionCfg(section, state, options = {}) {
+    const header = [
+      '// Generated by CS2 Config Generator',
+      `// Section: ${section.label}`,
+      '',
+    ];
+    const lines = toSectionLines(section, state, options);
+    return `${[...header, ...lines].join('\n')}\n`;
+  }
 
-    if (meta.type === 'toggle') {
-      if (meta.consoleFormat === 'bool') {
-        if (trimmed === 'true') return 1;
-        if (trimmed === 'false') return 0;
-      }
+  /**
+   * Combined cfg: either inlined commands or an autoexec that execs modular files.
+   * @param {object} sectionsState
+   * @param {object} [options]
+   * @param {'inline'|'exec'} [options.mode='inline']
+   * @param {boolean} [options.minimal=false]
+   */
+  function toCombinedCfg(sectionsState, options = {}) {
+    const mode = options.mode === 'exec' ? 'exec' : 'inline';
+    const header = ['// Generated by CS2 Config Generator', ''];
+
+    if (mode === 'exec') {
+      const execLines = ConfigSections.ALL.map((section) => `exec ${section.fileName}`);
+      return `${[...header, ...execLines].join('\n')}\n`;
     }
 
-    return clampSettingValue(key, trimmed);
+    const body = [];
+    for (const section of ConfigSections.ALL) {
+      const lines = toSectionLines(section, sectionsState[section.id] || {}, options);
+      if (!lines.length) continue;
+      body.push(`// --- ${section.label} ---`, ...lines, '');
+    }
+
+    return `${[...header, ...body].join('\n').trimEnd()}\n`;
+  }
+
+  function downloadTextFile(filename, content) {
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function downloadSectionCfg(section, state, options = {}) {
+    downloadTextFile(`${section.fileName}.cfg`, toSectionCfg(section, state, options));
+  }
+
+  function downloadCombinedCfg(sectionsState, options = {}) {
+    const filename = options.mode === 'exec' ? 'autoexec.cfg' : 'cs2-config.cfg';
+    downloadTextFile(filename, toCombinedCfg(sectionsState, options));
+  }
+
+  /**
+   * Download each section cfg, then optional exec autoexec. Staggers downloads for browsers.
+   */
+  function downloadAllModular(sectionsState, options = {}) {
+    ConfigSections.ALL.forEach((section, index) => {
+      setTimeout(() => {
+        downloadSectionCfg(section, sectionsState[section.id] || {}, options);
+      }, index * 150);
+    });
+
+    setTimeout(() => {
+      downloadCombinedCfg(sectionsState, { ...options, mode: 'exec' });
+    }, ConfigSections.ALL.length * 150);
+  }
+
+  function collectDelta(sectionsState) {
+    const compact = {};
+    for (const section of ConfigSections.ALL) {
+      const state = sectionsState[section.id] || {};
+      for (const key of section.CVAR_ORDER) {
+        if (!section.isAtDefault(key, state)) {
+          compact[key] = state[key];
+        }
+      }
+    }
+    return compact;
   }
 
   /**
    * Parse state from URL-safe compact encoding (delta or full).
+   * Supports legacy flat crosshair deltas and nested `{ sections: { ... } }`.
    * @param {string} encoded
-   * @returns {{ crosshair: object, previewBackground?: string, previewMode?: string }|null}
+   * @returns {{ sections: object, previewBackground?: string, previewMode?: string }|null}
    */
   function fromUrlParam(encoded) {
     try {
       const parsed = JSON.parse(decodeURIComponent(atob(encoded)));
       if (typeof parsed !== 'object' || parsed === null) return null;
 
-      const state = createDefaultCrosshairState();
-      for (const key of CROSSHAIR_CVAR_ORDER) {
-        if (key in parsed) {
-          state[key] = clampSettingValue(key, parsed[key]);
+      const sections = ConfigSections.createDefaultSectionsState();
+
+      if (parsed.sections && typeof parsed.sections === 'object') {
+        for (const section of ConfigSections.ALL) {
+          section.mergeState(sections[section.id], parsed.sections[section.id]);
+        }
+      } else {
+        for (const [key, value] of Object.entries(parsed)) {
+          if (key.startsWith('_')) continue;
+          const section = ConfigSections.findSectionForCvar(key);
+          if (!section) continue;
+          sections[section.id][key] = section.clamp(key, value);
         }
       }
 
-      const result = { crosshair: state };
+      const result = { sections };
 
       if (typeof parsed._bg === 'string' && Backgrounds.isValidId(parsed._bg)) {
         result.previewBackground = parsed._bg;
@@ -128,21 +244,15 @@ const CrosshairCommands = (() => {
   }
 
   /**
-   * Encode state for URL sharing (delta encoding for shorter links).
-   * @param {object} state
+   * Encode multi-section state for URL sharing (flat delta for shorter + legacy-compatible links).
+   * @param {object} sectionsState
    * @param {object} [options]
    * @param {boolean} [options.includePreview=false]
    * @param {string} [options.previewBackground]
    * @param {string} [options.previewMode]
-   * @returns {string}
    */
-  function toUrlParam(state, options = {}) {
-    const compact = {};
-    for (const key of CROSSHAIR_CVAR_ORDER) {
-      if (!isSettingAtDefault(key, state)) {
-        compact[key] = state[key];
-      }
-    }
+  function toUrlParam(sectionsState, options = {}) {
+    const compact = collectDelta(sectionsState);
 
     if (options.includePreview) {
       if (options.previewBackground && options.previewBackground !== Backgrounds.DEFAULT_ID) {
@@ -156,11 +266,53 @@ const CrosshairCommands = (() => {
     return btoa(encodeURIComponent(JSON.stringify(compact)));
   }
 
+  // Backward-compatible façade for crosshair-only callers (presets tooling / older code).
+  const CrosshairCommands = {
+    toCommandString(state, options = {}) {
+      return toCommandString({ crosshair: state }, { ...options, sectionId: 'crosshair' });
+    },
+    toMultilineString(state, options = {}) {
+      return toMultilineString({ crosshair: state }, { ...options, sectionId: 'crosshair', comments: false });
+    },
+    fromCommandString(text) {
+      const result = fromCommandString(text);
+      const state = CrosshairSection.createDefaultState();
+      CrosshairSection.mergeState(state, result.sections.crosshair || {});
+      return {
+        state,
+        parsed: result.parsed,
+        skipped: result.skipped,
+      };
+    },
+    fromUrlParam(encoded) {
+      const parsed = fromUrlParam(encoded);
+      if (!parsed) return null;
+      return {
+        crosshair: parsed.sections.crosshair,
+        previewBackground: parsed.previewBackground,
+        previewMode: parsed.previewMode,
+      };
+    },
+    toUrlParam(state, options = {}) {
+      return toUrlParam({ crosshair: state }, options);
+    },
+  };
+
   return {
     toCommandString,
     toMultilineString,
     fromCommandString,
+    toSectionCfg,
+    toCombinedCfg,
+    downloadTextFile,
+    downloadSectionCfg,
+    downloadCombinedCfg,
+    downloadAllModular,
     fromUrlParam,
     toUrlParam,
+    CrosshairCommands,
   };
 })();
+
+/** @deprecated Prefer ConfigCommands; kept for clarity with older script expectations. */
+const CrosshairCommands = ConfigCommands.CrosshairCommands;

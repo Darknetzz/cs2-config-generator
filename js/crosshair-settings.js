@@ -426,71 +426,43 @@ const CROSSHAIR_SETTINGS = {
   },
 };
 
+const CrosshairSection = createSettingsModule({
+  id: 'crosshair',
+  label: 'Crosshair',
+  fileName: 'crosshair',
+  groups: CROSSHAIR_GROUPS,
+  settings: CROSSHAIR_SETTINGS,
+});
+
 /** Ordered list of all cvar keys for command generation. */
-const CROSSHAIR_CVAR_ORDER = CROSSHAIR_GROUPS.flatMap((g) => g.settings);
+const CROSSHAIR_CVAR_ORDER = CrosshairSection.CVAR_ORDER;
 
 /** Build a fresh state object from defaults. */
 function createDefaultCrosshairState() {
-  const state = {};
-  for (const key of CROSSHAIR_CVAR_ORDER) {
-    state[key] = CROSSHAIR_SETTINGS[key].default;
-  }
-  return state;
+  return CrosshairSection.createDefaultState();
 }
 
 /** Clamp and round a numeric value to the setting's step. */
 function clampSettingValue(key, raw) {
-  const meta = CROSSHAIR_SETTINGS[key];
-  let val = Number(raw);
-  if (Number.isNaN(val)) return meta.default;
-
-  if (meta.type === 'toggle') {
-    return val ? 1 : 0;
-  }
-
-  if (meta.type === 'select') {
-    const allowed = meta.options.map((o) => o.value);
-    return allowed.includes(val) ? val : meta.default;
-  }
-
-  val = Math.max(meta.min, Math.min(meta.max, val));
-  if (meta.step) {
-    const steps = Math.round(val / meta.step);
-    val = steps * meta.step;
-    val = Math.round(val * 1000) / 1000;
-  }
-  return val;
+  return CrosshairSection.clamp(key, raw);
 }
 
 /** Build state from default values plus preset overrides. */
 function applyPresetState(overrides) {
-  const state = createDefaultCrosshairState();
-  for (const [key, value] of Object.entries(overrides)) {
-    if (key in CROSSHAIR_SETTINGS) {
-      state[key] = clampSettingValue(key, value);
-    }
-  }
-  return state;
+  return CrosshairSection.applyOverrides(overrides);
 }
 
 /** Whether a setting row should be enabled given current state. */
 function isSettingEnabled(key, state) {
-  const meta = CROSSHAIR_SETTINGS[key];
-  if (!meta.enabledWhen) return true;
-  return Number(state[meta.enabledWhen.key]) === meta.enabledWhen.value;
+  return CrosshairSection.isEnabled(key, state);
 }
 
 /** Whether a setting matches its default value. */
 function isSettingAtDefault(key, state) {
-  const defaultVal = clampSettingValue(key, CROSSHAIR_SETTINGS[key].default);
-  const currentVal = clampSettingValue(key, state[key]);
-  return currentVal === defaultVal;
+  return CrosshairSection.isAtDefault(key, state);
 }
 
 /** Whether two crosshair states are equivalent. */
 function crosshairStatesMatch(a, b) {
-  for (const key of CROSSHAIR_CVAR_ORDER) {
-    if (clampSettingValue(key, a[key]) !== clampSettingValue(key, b[key])) return false;
-  }
-  return true;
+  return CrosshairSection.statesMatch(a, b);
 }

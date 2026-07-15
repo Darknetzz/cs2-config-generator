@@ -1,12 +1,15 @@
 /**
- * Main application — UI generation, state management, persistence, and preview updates.
+ * Main application — multi-section UI, state management, persistence, and preview updates.
  */
 (() => {
-  const STORAGE_KEY = 'cs2-crosshair-state';
+  const STORAGE_KEY = 'cs2-config-state';
+  const LEGACY_STORAGE_KEY = 'cs2-crosshair-state';
   const URL_PARAM = 's';
   const PERSIST_DEBOUNCE_MS = 250;
 
-  let crosshairState = createDefaultCrosshairState();
+  let sectionsState = ConfigSections.createDefaultSectionsState();
+  let activeSectionId = ConfigSections.DEFAULT_ID;
+  let exportScope = 'current';
   let previewBackground = 'dark';
   let previewZoom = PreviewZoom.DEFAULT;
   let previewMode = PreviewMode.DEFAULT_MODE;
@@ -16,8 +19,17 @@
   let persistTimer = null;
   let deletedPresetUndo = null;
 
+  const sectionMounts = {};
+
   const els = {
+    sectionTabs: document.getElementById('section-tabs'),
     settingsContainer: document.getElementById('settings-container'),
+    crosshairPreview: document.getElementById('crosshair-preview'),
+    sectionSummary: document.getElementById('section-summary'),
+    sectionSummaryTitle: document.getElementById('section-summary-title'),
+    sectionSummaryMeta: document.getElementById('section-summary-meta'),
+    sectionSummaryList: document.getElementById('section-summary-list'),
+    sectionSummaryEmpty: document.getElementById('section-summary-empty'),
     previewCanvas: document.getElementById('preview-canvas'),
     canvasWrap: document.querySelector('.canvas-wrap'),
     zoomInBtn: document.getElementById('zoom-in-btn'),
@@ -27,6 +39,8 @@
     copyBtn: document.getElementById('copy-btn'),
     copyMinimalBtn: document.getElementById('copy-minimal-btn'),
     applyImportBtn: document.getElementById('apply-import-btn'),
+    downloadCfgBtn: document.getElementById('download-cfg-btn'),
+    downloadAllBtn: document.getElementById('download-all-btn'),
     resetBtn: document.getElementById('reset-btn'),
     shareBtn: document.getElementById('share-btn'),
     toast: document.getElementById('toast'),
@@ -48,7 +62,20 @@
     importPresetsBtn: document.getElementById('import-presets-btn'),
     importPresetsInput: document.getElementById('import-presets-input'),
     themeToggle: document.getElementById('theme-toggle'),
+    settingsPanel: document.getElementById('settings-panel'),
   };
+
+  function getActiveSection() {
+    return ConfigSections.getActiveOrDefault(activeSectionId);
+  }
+
+  function getCrosshairState() {
+    return sectionsState.crosshair;
+  }
+
+  function exportSectionId() {
+    return exportScope === 'current' ? activeSectionId : null;
+  }
 
   function showToast(message, duration = 2000) {
     els.toast.textContent = message;
@@ -73,7 +100,7 @@
     const isLineup = previewMode === PreviewMode.MODES.LINEUP;
     const isSniper = previewMode === PreviewMode.MODES.SNIPER;
     const isDynamic = !isLineup && !isSniper
-      && CrosshairRenderer.isDynamicStyle(crosshairState.cl_crosshairstyle);
+      && CrosshairRenderer.isDynamicStyle(getCrosshairState().cl_crosshairstyle);
     els.styleNote.hidden = !isDynamic;
     els.lineupNote.hidden = !isLineup;
     els.sniperNote.hidden = !isSniper;
@@ -87,7 +114,7 @@
   }
 
   function updateColorSwatch() {
-    const color = CrosshairRenderer.resolveColor(crosshairState);
+    const color = CrosshairRenderer.resolveColor(getCrosshairState());
     els.colorSwatch.style.background = `rgba(${color.r}, ${color.g}, ${color.b}, ${color.a})`;
     if (els.colorSwatchLabel) {
       els.colorSwatchLabel.textContent = formatColorLabel(color);
@@ -121,6 +148,7 @@
   }
 
   function updatePreview() {
+    if (activeSectionId !== 'crosshair') return;
     syncCanvasDimensions();
     updateColorSwatch();
     updateStyleNote();
@@ -132,7 +160,7 @@
     const lineupBtn = els.previewModeRoot?.querySelector('[data-mode="lineup"]');
     if (!lineupBtn) return;
 
-    const enabled = PreviewMode.isLineupEnabled(crosshairState);
+    const enabled = PreviewMode.isLineupEnabled(getCrosshairState());
     lineupBtn.disabled = !enabled;
     lineupBtn.title = enabled ? '' : 'Enable a grenade lineup reticle in settings first';
     lineupBtn.classList.toggle('mode-btn-disabled', !enabled);
@@ -144,6 +172,7 @@
 
   function managePreviewAnimation() {
     const options = getPreviewRenderOptions();
+    const crosshairState = getCrosshairState();
 
     if (previewMode !== PreviewMode.MODES.NORMAL) {
       CrosshairRenderer.stopAnimation();
@@ -154,7 +183,7 @@
     if (CrosshairRenderer.isDynamicStyle(crosshairState.cl_crosshairstyle)) {
       CrosshairRenderer.startAnimation(
         els.previewCanvas,
-        () => crosshairState,
+        () => getCrosshairState(),
         () => previewBackground,
         getPreviewRenderOptions,
       );
@@ -167,12 +196,21 @@
 
   function updateCommands() {
     if (document.activeElement === els.commandOutput) return;
-    els.commandOutput.value = CrosshairCommands.toMultilineString(crosshairState);
+    els.commandOutput.value = ConfigCommands.toMultilineString(sectionsState, {
+      sectionId: exportSectionId(),
+      comments: exportScope === 'all',
+    });
+  }
+
+  function isSectionAtDefault(sectionId) {
+    const section = ConfigSections.get(sectionId);
+    const state = sectionsState[sectionId];
+    return section.CVAR_ORDER.every((key) => section.isAtDefault(key, state));
   }
 
   function isAtFullDefault() {
-    for (const key of CROSSHAIR_CVAR_ORDER) {
-      if (!isSettingAtDefault(key, crosshairState)) return false;
+    for (const section of ConfigSections.ALL) {
+      if (!isSectionAtDefault(section.id)) return false;
     }
     return previewBackground === Backgrounds.DEFAULT_ID
       && previewZoom === PreviewZoom.DEFAULT
@@ -184,8 +222,57 @@
     els.resetBtn.disabled = isAtFullDefault();
   }
 
+  function updateSectionSummary() {
+    const section = getActiveSection();
+    if (section.id === 'crosshair') return;
+
+    const state = sectionsState[section.id];
+    const changedKeys = section.CVAR_ORDER.filter((key) => !section.isAtDefault(key, state));
+
+    els.sectionSummaryTitle.textContent = section.label;
+    els.sectionSummaryMeta.textContent = changedKeys.length
+      ? `${changedKeys.length} setting${changedKeys.length === 1 ? '' : 's'} changed from default`
+      : 'No changes from defaults';
+
+    els.sectionSummaryList.replaceChildren();
+    for (const key of changedKeys) {
+      const meta = section.SETTINGS[key];
+      const item = document.createElement('li');
+      const label = document.createElement('span');
+      label.className = 'section-summary-key';
+      label.textContent = meta.label;
+      const value = document.createElement('code');
+      value.textContent = `${key} ${state[key]}`;
+      item.append(label, value);
+      els.sectionSummaryList.append(item);
+    }
+
+    els.sectionSummaryEmpty.hidden = changedKeys.length > 0;
+    els.sectionSummaryList.hidden = changedKeys.length === 0;
+  }
+
+  function updateSectionVisibility() {
+    const isCrosshair = activeSectionId === 'crosshair';
+    els.crosshairPreview.hidden = !isCrosshair;
+    els.sectionSummary.hidden = isCrosshair;
+
+    for (const section of ConfigSections.ALL) {
+      const mount = sectionMounts[section.id];
+      if (mount) mount.hidden = section.id !== activeSectionId;
+    }
+
+    els.settingsPanel.setAttribute('aria-label', `${getActiveSection().label} settings`);
+    updateSectionSummary();
+
+    if (isCrosshair) {
+      updatePreview();
+    } else {
+      CrosshairRenderer.stopAnimation();
+    }
+  }
+
   function refresh(options = {}) {
-    updatePreview();
+    updateSectionVisibility();
     if (!options.skipCommands) updateCommands();
     updateControlStates();
     updateColorPresetButtons();
@@ -194,40 +281,46 @@
     if (!suppressPersist) schedulePersist();
   }
 
-  function setState(key, rawValue) {
-    crosshairState[key] = clampSettingValue(key, rawValue);
+  function setState(section, key, rawValue) {
+    sectionsState[section.id][key] = section.clamp(key, rawValue);
     refresh();
   }
 
   function updateControlStates() {
-    for (const key of CROSSHAIR_CVAR_ORDER) {
-      const row = document.querySelector(`[data-setting="${key}"]`);
-      if (!row) continue;
+    for (const section of ConfigSections.ALL) {
+      const state = sectionsState[section.id];
+      for (const key of section.CVAR_ORDER) {
+        const row = document.querySelector(`[data-setting="${key}"]`);
+        if (!row) continue;
 
-      const meta = CROSSHAIR_SETTINGS[key];
-      const enabled = isSettingEnabled(key, crosshairState);
+        const meta = section.SETTINGS[key];
+        const enabled = section.isEnabled(key, state);
 
-      if (meta.hideWhenDisabled) {
-        row.hidden = !enabled;
-        continue;
+        if (meta.hideWhenDisabled) {
+          row.hidden = !enabled;
+          continue;
+        }
+
+        row.hidden = false;
+        row.classList.toggle('disabled', !enabled);
+        row.querySelectorAll('input, select').forEach((input) => {
+          input.disabled = !enabled;
+        });
       }
-
-      row.hidden = false;
-      row.classList.toggle('disabled', !enabled);
-      row.querySelectorAll('input, select').forEach((input) => {
-        input.disabled = !enabled;
-      });
     }
 
     document.querySelectorAll('[data-reset-for]').forEach((btn) => {
       const key = btn.dataset.resetFor;
-      const atDefault = isSettingAtDefault(key, crosshairState);
+      const section = ConfigSections.findSectionForCvar(key);
+      if (!section) return;
+      const atDefault = section.isAtDefault(key, sectionsState[section.id]);
       btn.disabled = atDefault;
       btn.classList.toggle('is-default', atDefault);
     });
   }
 
-  function createRangeControl(key, meta) {
+  function createRangeControl(section, key, meta) {
+    const state = sectionsState[section.id];
     const wrap = document.createElement('div');
     wrap.className = 'range-wrap';
 
@@ -237,7 +330,7 @@
     range.min = meta.min;
     range.max = meta.max;
     range.step = meta.step;
-    range.value = crosshairState[key];
+    range.value = state[key];
     range.setAttribute('aria-describedby', `desc-${key}`);
 
     const number = document.createElement('input');
@@ -246,22 +339,22 @@
     number.min = meta.min;
     number.max = meta.max;
     number.step = meta.step;
-    number.value = crosshairState[key];
+    number.value = state[key];
     number.setAttribute('aria-label', `${meta.label} value`);
     number.setAttribute('aria-describedby', `desc-${key}`);
 
     const sync = (val, fromInput = false) => {
-      const clamped = clampSettingValue(key, val);
+      const clamped = section.clamp(key, val);
       range.value = clamped;
       number.value = clamped;
       if (fromInput) {
-        crosshairState[key] = clamped;
+        sectionsState[section.id][key] = clamped;
         refresh({ skipCommands: true });
         schedulePersist();
         updateCommands();
         return;
       }
-      setState(key, clamped);
+      setState(section, key, clamped);
     };
 
     range.addEventListener('input', () => sync(range.value));
@@ -272,18 +365,19 @@
     return wrap;
   }
 
-  function createToggleControl(key, meta) {
+  function createToggleControl(section, key, meta) {
+    const state = sectionsState[section.id];
     const label = document.createElement('label');
     label.className = 'toggle';
 
     const input = document.createElement('input');
     input.type = 'checkbox';
     input.id = `input-${key}`;
-    input.checked = crosshairState[key] === 1;
-    input.setAttribute('aria-label', meta?.label ?? CROSSHAIR_SETTINGS[key].label);
+    input.checked = state[key] === 1;
+    input.setAttribute('aria-label', meta?.label ?? section.SETTINGS[key].label);
     input.setAttribute('aria-describedby', `desc-${key}`);
 
-    input.addEventListener('change', () => setState(key, input.checked ? 1 : 0));
+    input.addEventListener('change', () => setState(section, key, input.checked ? 1 : 0));
 
     const slider = document.createElement('span');
     slider.className = 'toggle-slider';
@@ -304,7 +398,7 @@
     const wrap = document.getElementById('input-cl_crosshaircolor');
     if (!wrap) return;
 
-    const selected = crosshairState.cl_crosshaircolor;
+    const selected = getCrosshairState().cl_crosshaircolor;
     wrap.querySelectorAll('[data-color-value]').forEach((btn) => {
       const value = Number(btn.dataset.colorValue);
       const isActive = value === selected;
@@ -314,13 +408,14 @@
       if (value === 5) {
         btn.querySelector('.color-swatch-dot')?.style.setProperty(
           'background',
-          getCrosshairSwatchColor(crosshairState),
+          getCrosshairSwatchColor(getCrosshairState()),
         );
       }
     });
   }
 
-  function createColorPresetControl(key, meta) {
+  function createColorPresetControl(section, key, meta) {
+    const state = sectionsState[section.id];
     const wrap = document.createElement('div');
     wrap.className = 'color-preset-toggle';
     wrap.id = `input-${key}`;
@@ -332,22 +427,23 @@
       btn.type = 'button';
       btn.className = 'color-preset-btn';
       btn.dataset.colorValue = opt.value;
-      const isActive = opt.value === crosshairState[key];
+      const isActive = opt.value === state[key];
       btn.classList.toggle('active', isActive);
       btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
 
       const swatchColor = opt.value === 5
-        ? getCrosshairSwatchColor(crosshairState)
+        ? getCrosshairSwatchColor(state)
         : presetColorToCss(opt.value);
       btn.append(createColorSwatchDot(swatchColor), document.createTextNode(opt.label));
-      btn.addEventListener('click', () => setState(key, opt.value));
+      btn.addEventListener('click', () => setState(section, key, opt.value));
       wrap.append(btn);
     }
 
     return wrap;
   }
 
-  function createSelectControl(key, meta) {
+  function createSelectControl(section, key, meta) {
+    const state = sectionsState[section.id];
     const select = document.createElement('select');
     select.id = `input-${key}`;
     select.setAttribute('aria-describedby', `desc-${key}`);
@@ -356,35 +452,35 @@
       const option = document.createElement('option');
       option.value = opt.value;
       option.textContent = opt.label;
-      if (opt.value === crosshairState[key]) option.selected = true;
+      if (opt.value === state[key]) option.selected = true;
       select.append(option);
     }
 
-    select.addEventListener('change', () => setState(key, Number(select.value)));
+    select.addEventListener('change', () => setState(section, key, Number(select.value)));
     return select;
   }
 
-  function resetSetting(key) {
-    crosshairState[key] = CROSSHAIR_SETTINGS[key].default;
+  function resetSetting(section, key) {
+    sectionsState[section.id][key] = section.SETTINGS[key].default;
     syncControlsFromState();
     refresh();
-    showToast(`${CROSSHAIR_SETTINGS[key].label} reset`);
+    showToast(`${section.SETTINGS[key].label} reset`);
   }
 
-  function createResetButton(key) {
+  function createResetButton(section, key) {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'setting-reset-btn';
     btn.dataset.resetFor = key;
     btn.title = 'Reset to default';
-    btn.setAttribute('aria-label', `Reset ${CROSSHAIR_SETTINGS[key].label} to default`);
+    btn.setAttribute('aria-label', `Reset ${section.SETTINGS[key].label} to default`);
     btn.textContent = '↺';
-    btn.addEventListener('click', () => resetSetting(key));
+    btn.addEventListener('click', () => resetSetting(section, key));
     return btn;
   }
 
-  function createSettingRow(key) {
-    const meta = CROSSHAIR_SETTINGS[key];
+  function createSettingRow(section, key) {
+    const meta = section.SETTINGS[key];
     const row = document.createElement('div');
     row.className = 'setting-row';
     row.dataset.setting = key;
@@ -411,7 +507,7 @@
       const badge = document.createElement('span');
       badge.className = 'preview-only-badge';
       badge.textContent = 'Export only';
-      badge.title = 'This setting is exported to console but not fully simulated in preview';
+      badge.title = 'This setting is exported but not fully simulated in preview';
       label.append(badge);
     }
 
@@ -425,28 +521,28 @@
 
     let control;
     if (meta.type === 'range') {
-      control = createRangeControl(key, meta);
+      control = createRangeControl(section, key, meta);
     } else if (meta.type === 'toggle') {
-      control = createToggleControl(key, meta);
+      control = createToggleControl(section, key, meta);
     } else if (meta.type === 'select') {
       control = key === 'cl_crosshaircolor'
-        ? createColorPresetControl(key, meta)
-        : createSelectControl(key, meta);
+        ? createColorPresetControl(section, key, meta)
+        : createSelectControl(section, key, meta);
     }
 
-    row.append(labelWrap, wrapSettingControl(key, control));
+    row.append(labelWrap, wrapSettingControl(section, key, control));
     return row;
   }
 
-  function wrapSettingControl(key, control) {
+  function wrapSettingControl(section, key, control) {
     const wrap = document.createElement('div');
     wrap.className = 'setting-control-wrap';
-    wrap.append(control, createResetButton(key));
+    wrap.append(control, createResetButton(section, key));
     return wrap;
   }
 
   function applyPreset(preset) {
-    crosshairState = { ...preset.state };
+    sectionsState.crosshair = { ...preset.state };
     syncControlsFromState();
     refresh();
     showToast(`Loaded ${preset.label}`);
@@ -503,7 +599,9 @@
       const customPreset = customPresets.find((p) => p.id === presetId);
       if (customPreset) presetState = customPreset.state;
 
-      const isActive = presetState ? crosshairStatesMatch(crosshairState, presetState) : false;
+      const isActive = presetState
+        ? CrosshairSection.statesMatch(getCrosshairState(), presetState)
+        : false;
       btn.classList.toggle('active', isActive);
     });
   }
@@ -583,7 +681,7 @@
       return;
     }
 
-    const nextPresets = CustomPresets.upsertPreset(customPresets, label, crosshairState);
+    const nextPresets = CustomPresets.upsertPreset(customPresets, label, getCrosshairState());
 
     if (!nextPresets) {
       showToast(`Maximum ${CustomPresets.MAX_PRESETS} presets`);
@@ -676,11 +774,22 @@
     });
   }
 
-  function buildSettingsUI() {
-    for (const group of CROSSHAIR_GROUPS) {
-      const section = document.createElement('details');
-      section.className = 'settings-group';
-      section.open = group.id === 'shape' || group.id === 'color';
+  function buildSettingsForSection(section) {
+    const mount = document.createElement('div');
+    mount.className = 'section-settings';
+    mount.dataset.section = section.id;
+    mount.hidden = section.id !== activeSectionId;
+
+    for (const group of section.GROUPS) {
+      const details = document.createElement('details');
+      details.className = 'settings-group';
+      details.open = group === section.GROUPS[0]
+        || group.id === 'shape'
+        || group.id === 'color'
+        || group.id === 'position'
+        || group.id === 'minimap'
+        || group.id === 'scale'
+        || group.id === 'limits';
 
       const summary = document.createElement('summary');
       const summaryLabel = document.createElement('span');
@@ -690,36 +799,95 @@
 
       const headerToggleKey = group.headerToggle;
       if (headerToggleKey) {
-        const toggle = createToggleControl(headerToggleKey, CROSSHAIR_SETTINGS[headerToggleKey]);
+        const toggle = createToggleControl(section, headerToggleKey, section.SETTINGS[headerToggleKey]);
         toggle.classList.add('summary-toggle');
         toggle.addEventListener('click', (e) => e.stopPropagation());
         toggle.addEventListener('mousedown', (e) => e.stopPropagation());
-        const resetBtn = createResetButton(headerToggleKey);
+        const resetBtn = createResetButton(section, headerToggleKey);
         resetBtn.classList.add('summary-reset-btn');
         resetBtn.addEventListener('click', (e) => e.stopPropagation());
         resetBtn.addEventListener('mousedown', (e) => e.stopPropagation());
         summary.append(toggle, resetBtn);
       }
 
-      section.append(summary);
+      details.append(summary);
 
       const body = document.createElement('div');
       body.className = 'settings-group-body';
 
       for (const key of group.settings) {
         if (key === headerToggleKey) continue;
-        body.append(createSettingRow(key));
+        body.append(createSettingRow(section, key));
       }
 
-      section.append(body);
-      els.settingsContainer.append(section);
+      details.append(body);
+      mount.append(details);
+    }
+
+    sectionMounts[section.id] = mount;
+    els.settingsContainer.append(mount);
+  }
+
+  function buildSettingsUI() {
+    els.settingsContainer.replaceChildren();
+    for (const section of ConfigSections.ALL) {
+      buildSettingsForSection(section);
     }
   }
 
-  function applyCrosshairState(state) {
-    for (const key of CROSSHAIR_CVAR_ORDER) {
-      if (key in state) {
-        crosshairState[key] = clampSettingValue(key, state[key]);
+  function buildSectionTabs() {
+    els.sectionTabs.replaceChildren();
+
+    for (const section of ConfigSections.ALL) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'section-tab';
+      btn.setAttribute('role', 'tab');
+      btn.id = `section-tab-${section.id}`;
+      btn.dataset.section = section.id;
+      btn.setAttribute('aria-selected', section.id === activeSectionId ? 'true' : 'false');
+      btn.textContent = section.label;
+      btn.addEventListener('click', () => setActiveSection(section.id));
+      els.sectionTabs.append(btn);
+    }
+
+    updateSectionTabs();
+  }
+
+  function updateSectionTabs() {
+    els.sectionTabs?.querySelectorAll('.section-tab').forEach((btn) => {
+      const isActive = btn.dataset.section === activeSectionId;
+      btn.classList.toggle('active', isActive);
+      btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+    });
+  }
+
+  function setActiveSection(id) {
+    if (!ConfigSections.isValidId(id)) return;
+    activeSectionId = id;
+    updateSectionTabs();
+    refresh();
+  }
+
+  function setExportScope(scope) {
+    if (scope !== 'current' && scope !== 'all') return;
+    exportScope = scope;
+    setTogglePressed(document.querySelector('.export-toggle'), '.export-scope-btn', scope, 'data-export-scope');
+    updateCommands();
+  }
+
+  function initExportScope() {
+    document.querySelectorAll('[data-export-scope]').forEach((btn) => {
+      btn.addEventListener('click', () => setExportScope(btn.dataset.exportScope));
+    });
+    setTogglePressed(document.querySelector('.export-toggle'), '.export-scope-btn', exportScope, 'data-export-scope');
+  }
+
+  function applySectionsState(incoming) {
+    if (!incoming || typeof incoming !== 'object') return;
+    for (const section of ConfigSections.ALL) {
+      if (incoming[section.id]) {
+        section.mergeState(sectionsState[section.id], incoming[section.id]);
       }
     }
   }
@@ -729,10 +897,10 @@
     const encoded = params.get(URL_PARAM);
     if (!encoded) return false;
 
-    const parsed = CrosshairCommands.fromUrlParam(encoded);
+    const parsed = ConfigCommands.fromUrlParam(encoded);
     if (!parsed) return false;
 
-    applyCrosshairState(parsed.crosshair);
+    applySectionsState(parsed.sections);
 
     if (parsed.previewBackground) {
       previewBackground = parsed.previewBackground;
@@ -745,48 +913,81 @@
     return true;
   }
 
+  function migrateLegacyStorage(parsed) {
+    const migrated = {
+      sections: ConfigSections.createDefaultSectionsState(),
+      previewBackground: Backgrounds.DEFAULT_ID,
+      previewZoom: PreviewZoom.DEFAULT,
+      previewMode: PreviewMode.DEFAULT_MODE,
+      customPresets: [],
+      theme: 'system',
+      activeSection: ConfigSections.DEFAULT_ID,
+    };
+
+    if (parsed?.sections && typeof parsed.sections === 'object') {
+      applySectionsStateInto(migrated.sections, parsed.sections);
+    } else if (parsed?.crosshair && typeof parsed.crosshair === 'object') {
+      CrosshairSection.mergeState(migrated.sections.crosshair, parsed.crosshair);
+    } else if (parsed && typeof parsed === 'object' && 'cl_crosshairstyle' in parsed) {
+      CrosshairSection.mergeState(migrated.sections.crosshair, parsed);
+    }
+
+    if (parsed?.previewBackground && Backgrounds.isValidId(parsed.previewBackground)) {
+      migrated.previewBackground = parsed.previewBackground;
+    }
+    if (parsed?.previewZoom != null) {
+      migrated.previewZoom = PreviewZoom.clamp(parsed.previewZoom);
+    }
+    if (PreviewMode.isValidMode(parsed?.previewMode)) {
+      migrated.previewMode = parsed.previewMode;
+    }
+    if (parsed?.customPresets) {
+      migrated.customPresets = CustomPresets.parseList(parsed.customPresets);
+    }
+    if (parsed?.theme === 'system' || parsed?.theme === 'light' || parsed?.theme === 'dark') {
+      migrated.theme = parsed.theme;
+    }
+    if (ConfigSections.isValidId(parsed?.activeSection)) {
+      migrated.activeSection = parsed.activeSection;
+    }
+
+    return migrated;
+  }
+
+  function applySectionsStateInto(target, incoming) {
+    for (const section of ConfigSections.ALL) {
+      if (incoming[section.id]) {
+        section.mergeState(target[section.id], incoming[section.id]);
+      }
+    }
+  }
+
   function loadFromStorage() {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
+      let raw = localStorage.getItem(STORAGE_KEY);
+      let fromLegacy = false;
+      if (!raw) {
+        raw = localStorage.getItem(LEGACY_STORAGE_KEY);
+        fromLegacy = Boolean(raw);
+      }
       if (!raw) return false;
 
       const parsed = JSON.parse(raw);
-      let loaded = false;
+      const migrated = migrateLegacyStorage(parsed);
 
-      if (parsed?.crosshair && typeof parsed.crosshair === 'object') {
-        applyCrosshairState(parsed.crosshair);
-        loaded = true;
-      } else if (parsed && typeof parsed === 'object' && 'cl_crosshairstyle' in parsed) {
-        applyCrosshairState(parsed);
-        loaded = true;
+      sectionsState = migrated.sections;
+      previewBackground = migrated.previewBackground;
+      previewZoom = migrated.previewZoom;
+      previewMode = migrated.previewMode;
+      customPresets = migrated.customPresets;
+      colorTheme = migrated.theme;
+      activeSectionId = migrated.activeSection;
+
+      if (fromLegacy) {
+        persistState();
       }
 
-      if (parsed?.previewBackground && Backgrounds.isValidId(parsed.previewBackground)) {
-        previewBackground = parsed.previewBackground;
-        loaded = true;
-      }
-
-      if (parsed?.previewZoom != null) {
-        previewZoom = PreviewZoom.clamp(parsed.previewZoom);
-        loaded = true;
-      }
-
-      if (PreviewMode.isValidMode(parsed?.previewMode)) {
-        previewMode = parsed.previewMode;
-        loaded = true;
-      }
-
-      if (parsed?.customPresets) {
-        customPresets = CustomPresets.parseList(parsed.customPresets);
-        loaded = true;
-      }
-
-      if (parsed?.theme === 'system' || parsed?.theme === 'light' || parsed?.theme === 'dark') {
-        colorTheme = parsed.theme;
-        loaded = true;
-      }
-
-      return loaded;
+      return true;
     } catch {
       return false;
     }
@@ -795,7 +996,8 @@
   function persistState() {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({
-        crosshair: crosshairState,
+        sections: sectionsState,
+        activeSection: activeSectionId,
         previewBackground,
         previewZoom,
         previewMode,
@@ -803,7 +1005,7 @@
         theme: colorTheme,
       }));
       const url = new URL(window.location.href);
-      url.searchParams.set(URL_PARAM, CrosshairCommands.toUrlParam(crosshairState, {
+      url.searchParams.set(URL_PARAM, ConfigCommands.toUrlParam(sectionsState, {
         includePreview: true,
         previewBackground,
         previewMode,
@@ -821,26 +1023,29 @@
 
   function syncControlsFromState() {
     suppressPersist = true;
-    for (const key of CROSSHAIR_CVAR_ORDER) {
-      const input = document.getElementById(`input-${key}`);
-      if (!input) continue;
+    for (const section of ConfigSections.ALL) {
+      const state = sectionsState[section.id];
+      for (const key of section.CVAR_ORDER) {
+        const input = document.getElementById(`input-${key}`);
+        if (!input) continue;
 
-      const meta = CROSSHAIR_SETTINGS[key];
-      const val = crosshairState[key];
+        const meta = section.SETTINGS[key];
+        const val = state[key];
 
-      if (meta.type === 'toggle') {
-        input.checked = val === 1;
-      } else if (meta.type === 'select') {
-        if (key === 'cl_crosshaircolor') {
-          updateColorPresetButtons();
-        } else {
-          input.value = String(val);
+        if (meta.type === 'toggle') {
+          input.checked = val === 1;
+        } else if (meta.type === 'select') {
+          if (key === 'cl_crosshaircolor') {
+            updateColorPresetButtons();
+          } else {
+            input.value = String(val);
+          }
+        } else if (meta.type === 'range') {
+          input.value = val;
+          const row = input.closest('.setting-row');
+          const number = row?.querySelector('.number-input');
+          if (number) number.value = val;
         }
-      } else if (meta.type === 'range') {
-        input.value = val;
-        const row = input.closest('.setting-row');
-        const number = row?.querySelector('.number-input');
-        if (number) number.value = val;
       }
     }
     suppressPersist = false;
@@ -871,21 +1076,31 @@
   }
 
   function resetToDefaults() {
-    if (!window.confirm('Reset all crosshair settings, preview, and theme to defaults?')) return;
+    const scopeLabel = exportScope === 'current'
+      ? `${getActiveSection().label} settings`
+      : 'all config sections, preview, and theme';
 
-    crosshairState = createDefaultCrosshairState();
-    previewBackground = Backgrounds.DEFAULT_ID;
-    previewZoom = PreviewZoom.DEFAULT;
-    previewMode = PreviewMode.DEFAULT_MODE;
-    colorTheme = 'system';
+    if (!window.confirm(`Reset ${scopeLabel} to defaults?`)) return;
+
+    if (exportScope === 'current') {
+      const section = getActiveSection();
+      sectionsState[section.id] = section.createDefaultState();
+    } else {
+      sectionsState = ConfigSections.createDefaultSectionsState();
+      previewBackground = Backgrounds.DEFAULT_ID;
+      previewZoom = PreviewZoom.DEFAULT;
+      previewMode = PreviewMode.DEFAULT_MODE;
+      colorTheme = 'system';
+      setPreviewBackground(previewBackground);
+      applyPreviewZoom();
+      applyPreviewMode();
+      setColorTheme(colorTheme);
+      CrosshairRenderer.invalidateBgCache();
+    }
+
     syncControlsFromState();
-    setPreviewBackground(previewBackground);
-    applyPreviewZoom();
-    applyPreviewMode();
-    setColorTheme(colorTheme);
-    CrosshairRenderer.invalidateBgCache();
     refresh();
-    showToast('Reset to defaults');
+    showToast(exportScope === 'current' ? `${getActiveSection().label} reset` : 'Reset to defaults');
   }
 
   async function copyText(text, button, successLabel = 'Copied!') {
@@ -911,28 +1126,48 @@
   }
 
   async function copyCommands(minimal = false) {
-    const text = CrosshairCommands.toCommandString(crosshairState, { minimal });
+    const text = ConfigCommands.toCommandString(sectionsState, {
+      minimal,
+      sectionId: exportSectionId(),
+    });
     await copyText(text, minimal ? els.copyMinimalBtn : els.copyBtn);
   }
 
   function applyImportedCommands() {
-    const { state, parsed, skipped } = CrosshairCommands.fromCommandString(els.commandOutput.value);
+    const { sections, parsed, skipped } = ConfigCommands.fromCommandString(els.commandOutput.value);
 
     if (parsed === 0) {
       showToast('No valid commands found');
       return;
     }
 
-    applyCrosshairState(state);
+    applySectionsState(sections);
     syncControlsFromState();
     refresh();
     const suffix = skipped > 0 ? ` (${skipped} skipped)` : '';
     showToast(`Applied ${parsed} setting(s)${suffix}`);
   }
 
+  function downloadCfg() {
+    if (exportScope === 'current') {
+      const section = getActiveSection();
+      ConfigCommands.downloadSectionCfg(section, sectionsState[section.id]);
+      showToast(`Downloaded ${section.fileName}.cfg`);
+      return;
+    }
+
+    ConfigCommands.downloadCombinedCfg(sectionsState, { mode: 'inline' });
+    showToast('Downloaded cs2-config.cfg');
+  }
+
+  function downloadAllSections() {
+    ConfigCommands.downloadAllModular(sectionsState);
+    showToast('Downloading section .cfg files + autoexec.cfg');
+  }
+
   async function shareLink() {
     const url = new URL(window.location.href);
-    url.searchParams.set(URL_PARAM, CrosshairCommands.toUrlParam(crosshairState, {
+    url.searchParams.set(URL_PARAM, ConfigCommands.toUrlParam(sectionsState, {
       includePreview: true,
       previewBackground,
       previewMode,
@@ -993,7 +1228,7 @@
 
   function setPreviewMode(mode) {
     if (!PreviewMode.isValidMode(mode)) return;
-    if (mode === PreviewMode.MODES.LINEUP && !PreviewMode.isLineupEnabled(crosshairState)) return;
+    if (mode === PreviewMode.MODES.LINEUP && !PreviewMode.isLineupEnabled(getCrosshairState())) return;
 
     previewMode = mode;
     applyPreviewMode();
@@ -1087,6 +1322,8 @@
     initPreviewMode();
     initCustomPresets();
     initKeyboardShortcuts();
+    initExportScope();
+    buildSectionTabs();
     buildPresetsUI();
     buildSettingsUI();
     buildBackgroundToggles();
@@ -1094,6 +1331,8 @@
     els.copyBtn.addEventListener('click', () => copyCommands(false));
     els.copyMinimalBtn?.addEventListener('click', () => copyCommands(true));
     els.applyImportBtn?.addEventListener('click', applyImportedCommands);
+    els.downloadCfgBtn?.addEventListener('click', downloadCfg);
+    els.downloadAllBtn?.addEventListener('click', downloadAllSections);
     els.resetBtn.addEventListener('click', resetToDefaults);
     els.shareBtn.addEventListener('click', shareLink);
 
