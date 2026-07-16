@@ -14,6 +14,8 @@
   --shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
   --font: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --mono: ui-monospace, 'Cascadia Code', 'Source Code Pro', monospace;
+  --tok-num: #79c0ff;
+  --tok-str: #a5d6a7;
 }
 
 :root[data-theme="light"] {
@@ -28,6 +30,8 @@
   --accent-hover: #d9480f;
   --accent-text: #ffffff;
   --shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --tok-num: #0550ae;
+  --tok-str: #116329;
 }
 
 @media (prefers-color-scheme: light) {
@@ -43,6 +47,8 @@
     --accent-hover: #d9480f;
     --accent-text: #ffffff;
     --shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    --tok-num: #0550ae;
+    --tok-str: #116329;
   }
 }
 
@@ -229,9 +235,9 @@ body {
 
 .layout {
   display: grid;
-  grid-template-columns: minmax(320px, 480px) minmax(0, 1fr) minmax(260px, 320px);
+  grid-template-columns: minmax(320px, 480px) minmax(0, 1fr) minmax(380px, 460px);
   gap: 1.25rem;
-  max-width: 1440px;
+  max-width: 1600px;
   margin: 0 auto;
   padding: 1.25rem 1.5rem 2rem;
   align-items: start;
@@ -1455,19 +1461,62 @@ select {
   cursor: not-allowed;
 }
 
-.command-output {
-  width: 100%;
+.command-output-wrap {
+  position: relative;
+  display: grid;
   flex: 1;
+  min-width: 0;
+  min-height: clamp(12rem, 40svh, 22rem);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+}
+
+.command-output-wrap > * {
+  grid-area: 1 / 1;
+}
+
+.command-output-highlight,
+.command-output {
+  margin: 0;
   padding: 0.75rem;
   font-family: var(--mono);
   font-size: 0.72rem;
   line-height: 1.45;
-  border: 1px solid var(--border);
+  white-space: pre;
+  tab-size: 2;
+  border: none;
   border-radius: 6px;
-  background: var(--bg);
-  color: var(--text);
-  resize: vertical;
   min-height: clamp(12rem, 40svh, 22rem);
+}
+
+.command-output-highlight {
+  overflow: hidden;
+  pointer-events: none;
+  color: var(--text);
+  background: transparent;
+}
+
+.command-output-highlight .tok-num {
+  color: var(--tok-num);
+}
+
+.command-output-highlight .tok-str {
+  color: var(--tok-str);
+}
+
+.command-output {
+  width: 100%;
+  resize: vertical;
+  color: transparent;
+  caret-color: var(--text);
+  background: transparent;
+  overflow: auto;
+}
+
+.command-output::selection {
+  background: color-mix(in srgb, var(--accent) 35%, transparent);
+  color: transparent;
 }
 
 .command-output:focus-visible {

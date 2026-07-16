@@ -44,6 +44,7 @@
     zoomOutBtn: document.getElementById('zoom-out-btn'),
     zoomLabel: document.getElementById('zoom-label'),
     commandOutput: document.getElementById('command-output'),
+    commandOutputHighlight: document.getElementById('command-output-highlight'),
     copyBtn: document.getElementById('copy-btn'),
     copyMinimalBtn: document.getElementById('copy-minimal-btn'),
     applyImportBtn: document.getElementById('apply-import-btn'),
@@ -332,12 +333,55 @@
     CrosshairRenderer.render(els.previewCanvas, crosshairState, previewBackground, 0, options);
   }
 
+  function escapeHtml(text) {
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }
+
+  /** Highlight numbers and double-quoted strings in command output. */
+  function highlightCommandText(text) {
+    const re = /("(?:\\.|[^"\\])*")|(?<=^|[\s;])(-?\d+(?:\.\d+)?)(?=[\s;]|$)/gm;
+    let html = '';
+    let last = 0;
+    let match;
+    while ((match = re.exec(text)) !== null) {
+      html += escapeHtml(text.slice(last, match.index));
+      if (match[1] != null) {
+        html += `<span class="tok-str">${escapeHtml(match[1])}</span>`;
+      } else {
+        html += `<span class="tok-num">${escapeHtml(match[2])}</span>`;
+      }
+      last = match.index + match[0].length;
+    }
+    html += escapeHtml(text.slice(last));
+    // Trailing newline keeps overlay height in sync with the textarea.
+    return `${html}\n`;
+  }
+
+  function updateCommandHighlight() {
+    if (!els.commandOutputHighlight) return;
+    els.commandOutputHighlight.innerHTML = highlightCommandText(els.commandOutput.value);
+  }
+
+  function setCommandOutput(text) {
+    els.commandOutput.value = text;
+    updateCommandHighlight();
+  }
+
+  function syncCommandOutputScroll() {
+    if (!els.commandOutputHighlight) return;
+    els.commandOutputHighlight.scrollTop = els.commandOutput.scrollTop;
+    els.commandOutputHighlight.scrollLeft = els.commandOutput.scrollLeft;
+  }
+
   function updateCommands() {
     if (document.activeElement === els.commandOutput) return;
-    els.commandOutput.value = ConfigCommands.toMultilineString(sectionsState, {
+    setCommandOutput(ConfigCommands.toMultilineString(sectionsState, {
       sectionId: exportSectionId(),
       comments: exportScope === 'all',
-    });
+    }));
   }
 
   function isSectionAtDefault(sectionId) {
@@ -1512,7 +1556,7 @@
     try {
       await navigator.clipboard.writeText(text);
     } catch {
-      els.commandOutput.value = text;
+      setCommandOutput(text);
       els.commandOutput.select();
       document.execCommand('copy');
     }
@@ -1748,6 +1792,8 @@
     els.downloadAllBtn?.addEventListener('click', downloadAllSections);
     els.resetBtn.addEventListener('click', resetToDefaults);
     els.shareBtn.addEventListener('click', shareLink);
+    els.commandOutput.addEventListener('input', updateCommandHighlight);
+    els.commandOutput.addEventListener('scroll', syncCommandOutputScroll);
 
     syncControlsFromState();
     applyPreviewZoom();

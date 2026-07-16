@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - GitHub repository link in the site header nav
+- Lightweight syntax highlighting in the config export editor (numbers and quoted strings)
 - Commands reference page (`commands.html`) with searchable/sortable CS2 console command and cvar catalog
 - Prefix-based category filters on the Commands page (Crosshair, HUD, Radar, etc.)
 - ConVar flag legend and tooltips explaining engine metadata under each command name
@@ -17,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Script to refresh the command catalog from the ArminC CS2 cvar dump (`scripts/refresh-cs2-commands.py`)
 
 ### Changed
+
+- Wider config export column; long cvar lines scroll horizontally instead of wrapping
 
 ### Fixed
 

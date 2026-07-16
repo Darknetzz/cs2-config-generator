@@ -217,12 +217,18 @@
         </div>
       </div>
       <label class="sr-only" for="command-output">Generated config commands — paste commands here to import</label>
-      <textarea
-        id="command-output"
-        class="command-output"
-        rows="20"
-        spellcheck="false"
-      ></textarea>
+      <div class="command-output-wrap">
+        <pre id="command-output-highlight" class="command-output-highlight" aria-hidden="true"></pre>
+        <textarea
+          id="command-output"
+          class="command-output"
+          rows="20"
+          spellcheck="false"
+          wrap="off"
+          autocomplete="off"
+          autocapitalize="off"
+        ></textarea>
+      </div>
       <p class="commands-hint">
         Edit or paste commands above, then click <strong>Apply pasted</strong>.
         Download a <code>.cfg</code> into your CS2 <code>cfg</code> folder, then run
