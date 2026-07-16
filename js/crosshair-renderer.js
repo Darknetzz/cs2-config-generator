@@ -10,6 +10,7 @@ const CrosshairRenderer = (() => {
 
   let animFrameId = null;
   let animCanvas = null;
+  let animCanvasSecondary = null;
   let getStateFn = null;
   let getBackgroundFn = null;
   let getOptionsFn = null;
@@ -713,12 +714,17 @@ const CrosshairRenderer = (() => {
     }
 
     const factor = getDynamicFactor(timestamp, state.cl_crosshairstyle);
-    render(animCanvas, state, getBackgroundFn(), factor, options);
+    const background = getBackgroundFn();
+    render(animCanvas, state, background, factor, options);
+    if (animCanvasSecondary) {
+      render(animCanvasSecondary, state, background, factor, options);
+    }
     animFrameId = requestAnimationFrame(animationLoop);
   }
 
-  function startAnimation(canvas, getState, getBackground, getOptions) {
+  function startAnimation(canvas, getState, getBackground, getOptions, secondaryCanvas = null) {
     animCanvas = canvas;
+    animCanvasSecondary = secondaryCanvas || null;
     getStateFn = getState;
     getBackgroundFn = getBackground;
     getOptionsFn = getOptions ?? null;
@@ -732,6 +738,7 @@ const CrosshairRenderer = (() => {
       animFrameId = null;
     }
     animCanvas = null;
+    animCanvasSecondary = null;
     getStateFn = null;
     getBackgroundFn = null;
     getOptionsFn = null;

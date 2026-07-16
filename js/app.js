@@ -18,6 +18,14 @@
   let suppressPersist = false;
   let persistTimer = null;
   let deletedPresetUndo = null;
+  let previewModalSection = null;
+  let previewModalOpener = null;
+
+  const PREVIEW_MODAL_TITLES = {
+    crosshair: 'Crosshair preview',
+    viewmodel: 'Viewmodel preview',
+    radar: 'Radar preview',
+  };
 
   const sectionMounts = {};
 
@@ -37,6 +45,10 @@
     previewCanvas: document.getElementById('preview-canvas'),
     viewmodelCanvas: document.getElementById('viewmodel-canvas'),
     radarCanvas: document.getElementById('radar-canvas'),
+    previewModal: document.getElementById('preview-modal'),
+    previewModalTitle: document.getElementById('preview-modal-title'),
+    previewModalClose: document.getElementById('preview-modal-close'),
+    previewModalCanvas: document.getElementById('preview-modal-canvas'),
     canvasWrap: document.getElementById('crosshair-canvas-wrap'),
     viewmodelCanvasWrap: document.getElementById('viewmodel-canvas-wrap'),
     radarCanvasWrap: document.getElementById('radar-canvas-wrap'),
@@ -174,6 +186,50 @@
     return { width, height };
   }
 
+  function fitAspectSize(aspect, maxW, maxH) {
+    let width = maxW;
+    let height = width / aspect;
+    if (height > maxH) {
+      height = maxH;
+      width = height * aspect;
+    }
+    return {
+      width: Math.max(1, Math.round(width)),
+      height: Math.max(1, Math.round(height)),
+    };
+  }
+
+  function getModalDisplaySize(sectionId) {
+    const maxW = Math.min(window.innerWidth * 0.92, 1600);
+    const maxH = Math.min(window.innerHeight * 0.82, 1200);
+
+    if (sectionId === 'crosshair') {
+      return Math.max(1, Math.floor(Math.min(maxW, maxH)));
+    }
+    if (sectionId === 'viewmodel') {
+      return fitAspectSize(ViewmodelRenderer.ASPECT || (16 / 9), maxW, maxH);
+    }
+    return fitAspectSize(RadarRenderer.ASPECT || (16 / 9), maxW, maxH);
+  }
+
+  function isPreviewModalOpen() {
+    return Boolean(els.previewModal?.open && previewModalSection);
+  }
+
+  function getModalCanvasIf(sectionId) {
+    if (!isPreviewModalOpen() || previewModalSection !== sectionId) return null;
+    return els.previewModalCanvas;
+  }
+
+  function syncModalCanvasSize() {
+    if (!els.previewModalCanvas || !previewModalSection) return false;
+    const changed = syncCanvasSize(els.previewModalCanvas, getModalDisplaySize(previewModalSection));
+    els.previewModalCanvas.style.imageRendering = previewModalSection === 'crosshair'
+      ? 'pixelated'
+      : 'auto';
+    return changed;
+  }
+
   function syncCanvasSize(canvas, size) {
     if (!canvas) return false;
 
@@ -248,33 +304,45 @@
     );
   }
 
-  function updateViewmodelPreview() {
+  async function updateViewmodelPreview() {
     if (activeSectionId !== 'viewmodel') return;
     syncCanvasDimensions();
-    void ViewmodelRenderer.render(
-      els.viewmodelCanvas,
-      getViewmodelState(),
-      previewBackground,
-    );
+    if (getModalCanvasIf('viewmodel') && syncModalCanvasSize()) {
+      CrosshairRenderer.invalidateBgCache();
+    }
+    const state = getViewmodelState();
+    await ViewmodelRenderer.render(els.viewmodelCanvas, state, previewBackground);
+    const modalCanvas = getModalCanvasIf('viewmodel');
+    if (modalCanvas) {
+      await ViewmodelRenderer.render(modalCanvas, state, previewBackground);
+    }
   }
 
   function manageRadarAnimation() {
     const state = getRadarState();
+    const modalCanvas = getModalCanvasIf('radar');
     if (Number(state.cl_radar_scale_dynamic) === 1) {
       RadarRenderer.startAnimation(
         els.radarCanvas,
         () => getRadarState(),
         () => previewBackground,
+        modalCanvas,
       );
       return;
     }
     RadarRenderer.stopAnimation();
     RadarRenderer.render(els.radarCanvas, state, previewBackground);
+    if (modalCanvas) {
+      RadarRenderer.render(modalCanvas, state, previewBackground);
+    }
   }
 
   function updateRadarPreview() {
     if (activeSectionId !== 'radar') return;
     syncCanvasDimensions();
+    if (getModalCanvasIf('radar') && syncModalCanvasSize()) {
+      CrosshairRenderer.invalidateBgCache();
+    }
     manageRadarAnimation();
   }
 
@@ -289,6 +357,9 @@
     }
     if (activeSectionId !== 'crosshair') return;
     syncCanvasDimensions();
+    if (getModalCanvasIf('crosshair') && syncModalCanvasSize()) {
+      CrosshairRenderer.invalidateBgCache();
+    }
     updateColorSwatch();
     updateStyleNote();
     updateLineupModeButton();
@@ -312,10 +383,14 @@
   function managePreviewAnimation() {
     const options = getPreviewRenderOptions();
     const crosshairState = getCrosshairState();
+    const modalCanvas = getModalCanvasIf('crosshair');
 
     if (previewMode !== PreviewMode.MODES.NORMAL) {
       CrosshairRenderer.stopAnimation();
       CrosshairRenderer.render(els.previewCanvas, crosshairState, previewBackground, 0, options);
+      if (modalCanvas) {
+        CrosshairRenderer.render(modalCanvas, crosshairState, previewBackground, 0, options);
+      }
       return;
     }
 
@@ -325,12 +400,75 @@
         () => getCrosshairState(),
         () => previewBackground,
         getPreviewRenderOptions,
+        modalCanvas,
       );
       return;
     }
 
     CrosshairRenderer.stopAnimation();
     CrosshairRenderer.render(els.previewCanvas, crosshairState, previewBackground, 0, options);
+    if (modalCanvas) {
+      CrosshairRenderer.render(modalCanvas, crosshairState, previewBackground, 0, options);
+    }
+  }
+
+  function openPreviewModal(sectionId, opener) {
+    if (!els.previewModal || !PREVIEW_MODAL_TITLES[sectionId]) return;
+    previewModalSection = sectionId;
+    previewModalOpener = opener || null;
+    if (els.previewModalTitle) {
+      els.previewModalTitle.textContent = PREVIEW_MODAL_TITLES[sectionId];
+    }
+    if (!els.previewModal.open) {
+      els.previewModal.showModal();
+    }
+    updatePreview();
+  }
+
+  function closePreviewModal() {
+    if (els.previewModal?.open) {
+      els.previewModal.close();
+      return;
+    }
+    onPreviewModalClosed();
+  }
+
+  function onPreviewModalClosed() {
+    const opener = previewModalOpener;
+    previewModalSection = null;
+    previewModalOpener = null;
+    CrosshairRenderer.stopAnimation();
+    RadarRenderer.stopAnimation();
+    updatePreview();
+    if (opener && typeof opener.focus === 'function') {
+      opener.focus();
+    }
+  }
+
+  function initPreviewModal() {
+    if (!els.previewModal) return;
+
+    const wraps = [
+      { el: els.canvasWrap, sectionId: 'crosshair' },
+      { el: els.viewmodelCanvasWrap, sectionId: 'viewmodel' },
+      { el: els.radarCanvasWrap, sectionId: 'radar' },
+    ];
+
+    for (const { el, sectionId } of wraps) {
+      if (!el) continue;
+      el.addEventListener('click', () => openPreviewModal(sectionId, el));
+      el.addEventListener('keydown', (event) => {
+        if (event.key !== 'Enter' && event.key !== ' ') return;
+        event.preventDefault();
+        openPreviewModal(sectionId, el);
+      });
+    }
+
+    els.previewModalClose?.addEventListener('click', () => closePreviewModal());
+    els.previewModal.addEventListener('click', (event) => {
+      if (event.target === els.previewModal) closePreviewModal();
+    });
+    els.previewModal.addEventListener('close', onPreviewModalClosed);
   }
 
   function escapeHtml(text) {
@@ -1286,6 +1424,7 @@
 
   function setActiveSection(id) {
     if (!ConfigSections.isValidId(id)) return;
+    if (isPreviewModalOpen()) closePreviewModal();
     activeSectionId = id;
     updateSectionTabs();
     refresh();
@@ -1772,6 +1911,7 @@
     loadFromUrl();
 
     initPreviewCanvas();
+    initPreviewModal();
     initThemeToggle();
     initPreviewZoom();
     initPreviewMode();

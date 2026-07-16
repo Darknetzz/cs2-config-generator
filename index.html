@@ -86,7 +86,13 @@
         </details>
 
         <div id="crosshair-preview" class="crosshair-preview">
-          <div class="canvas-wrap" id="crosshair-canvas-wrap">
+          <div
+            class="canvas-wrap canvas-wrap-expandable"
+            id="crosshair-canvas-wrap"
+            role="button"
+            tabindex="0"
+            aria-label="Expand crosshair preview"
+          >
             <canvas id="preview-canvas" aria-label="Crosshair preview canvas"></canvas>
           </div>
 
@@ -146,7 +152,13 @@
               <button type="button" class="mode-btn" data-weapon="glock" aria-pressed="false">Glock</button>
             </div>
           </div>
-          <div class="canvas-wrap viewmodel-canvas-wrap" id="viewmodel-canvas-wrap">
+          <div
+            class="canvas-wrap viewmodel-canvas-wrap canvas-wrap-expandable"
+            id="viewmodel-canvas-wrap"
+            role="button"
+            tabindex="0"
+            aria-label="Expand viewmodel preview"
+          >
             <canvas id="viewmodel-canvas" aria-label="Viewmodel preview from CS2 screenshots"></canvas>
             <div class="viewmodel-aim" aria-hidden="true"></div>
             <pre id="viewmodel-hud" class="viewmodel-hud" aria-hidden="true"></pre>
@@ -175,7 +187,13 @@
               </div>
             </div>
           </div>
-          <div class="canvas-wrap radar-canvas-wrap" id="radar-canvas-wrap">
+          <div
+            class="canvas-wrap radar-canvas-wrap canvas-wrap-expandable"
+            id="radar-canvas-wrap"
+            role="button"
+            tabindex="0"
+            aria-label="Expand radar preview"
+          >
             <canvas id="radar-canvas" aria-label="Schematic radar preview"></canvas>
           </div>
           <p class="preview-note muted">
@@ -218,7 +236,6 @@
       </div>
       <label class="sr-only" for="command-output">Generated config commands — paste commands here to import</label>
       <div class="command-output-wrap">
-        <pre id="command-output-highlight" class="command-output-highlight" aria-hidden="true"></pre>
         <textarea
           id="command-output"
           class="command-output"
@@ -228,6 +245,7 @@
           autocomplete="off"
           autocapitalize="off"
         ></textarea>
+        <pre id="command-output-highlight" class="command-output-highlight" aria-hidden="true"></pre>
       </div>
       <p class="commands-hint">
         Edit or paste commands above, then click <strong>Apply pasted</strong>.
@@ -239,6 +257,18 @@
   </main>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <dialog id="preview-modal" class="preview-modal" aria-labelledby="preview-modal-title">
+    <div class="preview-modal-inner">
+      <div class="preview-modal-header">
+        <h2 id="preview-modal-title">Preview</h2>
+        <button type="button" id="preview-modal-close" class="preview-modal-close" aria-label="Close preview">&times;</button>
+      </div>
+      <div class="preview-modal-body">
+        <canvas id="preview-modal-canvas" aria-label="Expanded preview"></canvas>
+      </div>
+    </div>
+  </dialog>
 
   <script src="js/settings-module.js"></script>
   <script src="js/crosshair-settings.js"></script>

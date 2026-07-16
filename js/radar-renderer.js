@@ -24,6 +24,7 @@ const RadarRenderer = (() => {
 
   let animFrameId = null;
   let animCanvas = null;
+  let animCanvasSecondary = null;
   let getStateFn = null;
   let getBackgroundFn = null;
 
@@ -375,17 +376,21 @@ const RadarRenderer = (() => {
   function animationLoop(timestamp) {
     if (!animCanvas || !getStateFn || !getBackgroundFn) return;
     const state = getStateFn();
+    const background = getBackgroundFn();
     if (Number(state.cl_radar_scale_dynamic) !== 1) {
       stopAnimation();
-      render(animCanvas, state, getBackgroundFn(), timestamp);
+      render(animCanvas, state, background, timestamp);
+      if (animCanvasSecondary) render(animCanvasSecondary, state, background, timestamp);
       return;
     }
-    render(animCanvas, state, getBackgroundFn(), timestamp);
+    render(animCanvas, state, background, timestamp);
+    if (animCanvasSecondary) render(animCanvasSecondary, state, background, timestamp);
     animFrameId = requestAnimationFrame(animationLoop);
   }
 
-  function startAnimation(canvas, getState, getBackground) {
+  function startAnimation(canvas, getState, getBackground, secondaryCanvas = null) {
     animCanvas = canvas;
+    animCanvasSecondary = secondaryCanvas || null;
     getStateFn = getState;
     getBackgroundFn = getBackground;
     if (isAnimating()) return;
@@ -398,6 +403,7 @@ const RadarRenderer = (() => {
       animFrameId = null;
     }
     animCanvas = null;
+    animCanvasSecondary = null;
     getStateFn = null;
     getBackgroundFn = null;
   }

@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Larger preview column and click-to-expand live preview modal (crosshair, viewmodel, radar)
 - GitHub repository link in the site header nav
 - Lightweight syntax highlighting in the config export editor (numbers and quoted strings)
 - Commands reference page (`commands.html`) with searchable/sortable CS2 console command and cvar catalog
@@ -20,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Wider config export column; long cvar lines scroll horizontally instead of wrapping
+- Wider inline preview column for crosshair / viewmodel / radar canvases
 
 ### Fixed
 
