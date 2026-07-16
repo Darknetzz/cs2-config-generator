@@ -84,7 +84,7 @@ const RadarRenderer = (() => {
     return Math.max(0.25, Math.min(1, zoom + pulse));
   }
 
-  /** Lower cl_radar_scale => more of the map visible. Plate matches default 0.7. */
+  /** Lower cl_radar_scale => more of the map visible. At 0.7 the plate ≈ fills the widget. */
   function visibleHalfExtent(zoom) {
     return 0.7 / Math.max(0.25, zoom);
   }
@@ -312,29 +312,29 @@ const RadarRenderer = (() => {
     ctx.restore();
   }
 
+  /**
+   * Origin is already at the widget center. Keep the player icon there,
+   * optionally pan ahead when not always-centered, then rotate the map.
+   */
   function withMapTransform(ctx, mapPx, playerPx, state, rotateRadar, drawFn) {
     const centered = Number(state.cl_radar_always_centered) === 1;
+    const half = mapPx * 0.5;
 
     let viewOffsetX = 0;
     let viewOffsetY = 0;
     if (!centered) {
       if (rotateRadar) {
-        viewOffsetX = Math.sin(PLAYER.yaw) * mapPx * 0.08;
-        viewOffsetY = -Math.cos(PLAYER.yaw) * mapPx * 0.08;
+        viewOffsetX = Math.sin(PLAYER.yaw) * half * 0.28;
+        viewOffsetY = -Math.cos(PLAYER.yaw) * half * 0.28;
       } else {
-        viewOffsetY = mapPx * 0.06;
+        viewOffsetY = half * 0.22;
       }
     }
 
     ctx.save();
-    ctx.translate(-playerPx.x + mapPx * 0.5 + viewOffsetX, -playerPx.y + mapPx * 0.5 + viewOffsetY);
-
-    if (rotateRadar) {
-      ctx.translate(playerPx.x, playerPx.y);
-      ctx.rotate(-PLAYER.yaw);
-      ctx.translate(-playerPx.x, -playerPx.y);
-    }
-
+    ctx.translate(viewOffsetX, viewOffsetY);
+    if (rotateRadar) ctx.rotate(-PLAYER.yaw);
+    ctx.translate(-playerPx.x, -playerPx.y);
     drawFn();
     ctx.restore();
   }
@@ -356,10 +356,15 @@ const RadarRenderer = (() => {
   }
 
   function drawIcons(ctx, mapPx, rotateRadar, iconBase) {
+    const upright = () => {
+      if (rotateRadar) ctx.rotate(PLAYER.yaw);
+    };
+
     for (const mate of TEAMMATES) {
       const p = uvToPx(mate.u, mate.v, mapPx);
       ctx.save();
       ctx.translate(p.x, p.y);
+      upright();
       drawTeammate(ctx, iconBase * 0.82, mate.color, mate.label);
       ctx.restore();
     }
@@ -368,6 +373,7 @@ const RadarRenderer = (() => {
       const p = uvToPx(ENEMY.u, ENEMY.v, mapPx);
       ctx.save();
       ctx.translate(p.x, p.y);
+      upright();
       drawEnemy(ctx, iconBase);
       ctx.restore();
     }
@@ -376,6 +382,7 @@ const RadarRenderer = (() => {
       const p = uvToPx(BOMB.u, BOMB.v, mapPx);
       ctx.save();
       ctx.translate(p.x, p.y);
+      upright();
       drawBomb(ctx, iconBase * 0.92);
       ctx.restore();
     }
@@ -383,6 +390,7 @@ const RadarRenderer = (() => {
     const playerPx = uvToPx(PLAYER.u, PLAYER.v, mapPx);
     ctx.save();
     ctx.translate(playerPx.x, playerPx.y);
+    upright();
     drawPlayerIcon(ctx, iconBase * 1.1, PLAYER.yaw, rotateRadar, 'B');
     ctx.restore();
   }
