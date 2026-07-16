@@ -30,6 +30,142 @@ MAX_RE = re.compile(r"\bmax:\s*(-?\d+(?:\.\d+)?)")
 STEP_RE = re.compile(r"\bstep:\s*(-?\d+(?:\.\d+)?)")
 OPTION_VALUE_RE = re.compile(r"value:\s*(-?\d+(?:\.\d+)?|['\"][^'\"]+['\"])")
 SKIP_SETTING_NAMES = {"settings", "groups", "options", "enabledWhen"}
+DEFAULT_CATEGORY = "Other"
+
+# First matching rule wins. Patterns: exact name, prefix (endswith *), or regex (re:…).
+CATEGORY_RULES: list[tuple[str, str]] = [
+    # Crosshair
+    ("cl_crosshair*", "Crosshair"),
+    ("cl_grenadecrosshair*", "Crosshair"),
+    ("cl_fixedcrosshair*", "Crosshair"),
+    ("cl_sniper_delay_unscope", "Crosshair"),
+    ("cl_sniper_show_inaccuracy", "Crosshair"),
+    # Viewmodel
+    ("viewmodel_*", "Viewmodel"),
+    ("cl_righthand", "Viewmodel"),
+    # Radar (before broader HUD cl_hud*)
+    ("cl_radar*", "Radar"),
+    ("cl_hud_radar*", "Radar"),
+    # FPS / Performance (before broader HUD)
+    ("fps_*", "FPS / Performance"),
+    ("cl_showfps", "FPS / Performance"),
+    ("cl_hud_telemetry*", "FPS / Performance"),
+    ("r_show_build_info", "FPS / Performance"),
+    ("cl_interp*", "FPS / Performance"),
+    ("cl_updaterate", "FPS / Performance"),
+    ("cl_cmdrate", "FPS / Performance"),
+    ("rate", "FPS / Performance"),
+    ("engine_no_focus_sleep", "FPS / Performance"),
+    # HUD
+    ("hud_*", "HUD"),
+    ("cl_hud*", "HUD"),
+    ("safezone*", "HUD"),
+    ("cl_drawhud", "HUD"),
+    ("cl_draw_only_deathnotices", "HUD"),
+    ("cl_showloadout", "HUD"),
+    ("cl_teamid*", "HUD"),
+    ("cl_teamcounter*", "HUD"),
+    ("cl_hide_avatar_images", "HUD"),
+    ("cl_allow_animated_avatars", "HUD"),
+    ("cl_scoreboard*", "HUD"),
+    ("cl_show_clan*", "HUD"),
+    # Mouse / Input
+    ("sensitivity", "Mouse / Input"),
+    ("zoom_sensitivity*", "Mouse / Input"),
+    ("m_*", "Mouse / Input"),
+    ("cl_mouselook", "Mouse / Input"),
+    ("cl_pitch*", "Mouse / Input"),
+    ("cl_yaw*", "Mouse / Input"),
+    ("option_duck_method", "Mouse / Input"),
+    ("option_speed_method", "Mouse / Input"),
+    # Audio
+    ("snd_*", "Audio"),
+    ("voice_*", "Audio"),
+    ("volume", "Audio"),
+    ("dsp_*", "Audio"),
+    ("adsp_*", "Audio"),
+    ("sndplaydelay", "Audio"),
+    # Graphics / Rendering
+    ("r_*", "Graphics"),
+    ("mat_*", "Graphics"),
+    ("gpu_*", "Graphics"),
+    ("csm_*", "Graphics"),
+    ("cl_particle*", "Graphics"),
+    ("cl_ragdoll*", "Graphics"),
+    ("violence_*", "Graphics"),
+    ("fog_*", "Graphics"),
+    ("cl_disable_ragdolls", "Graphics"),
+    # Network
+    ("net_*", "Network"),
+    ("cl_resend", "Network"),
+    ("cl_timeout", "Network"),
+    ("cl_lagcompensation", "Network"),
+    ("cl_predict*", "Network"),
+    ("mm_*", "Network"),
+    ("connect", "Network"),
+    ("disconnect", "Network"),
+    ("retry", "Network"),
+    # Server / Match
+    ("sv_*", "Server / Match"),
+    ("mp_*", "Server / Match"),
+    ("bot_*", "Server / Match"),
+    ("tv_*", "Server / Match"),
+    ("spec_*", "Server / Match"),
+    ("cash_*", "Server / Match"),
+    ("ff_damage*", "Server / Match"),
+    ("game_mode", "Server / Match"),
+    ("game_type", "Server / Match"),
+    ("map", "Server / Match"),
+    ("map_workshop", "Server / Match"),
+    ("changelevel", "Server / Match"),
+    ("host_*", "Server / Match"),
+    ("status", "Server / Match"),
+    ("users", "Server / Match"),
+    ("kickid", "Server / Match"),
+    ("banid", "Server / Match"),
+    # Demo / Replay
+    ("demo*", "Demo / Replay"),
+    ("record", "Demo / Replay"),
+    ("stop", "Demo / Replay"),
+    ("playdemo", "Demo / Replay"),
+    ("timedemo*", "Demo / Replay"),
+    ("ds_*", "Demo / Replay"),
+    # Console / Config
+    ("exec", "Console / Config"),
+    ("execifexists", "Console / Config"),
+    ("alias", "Console / Config"),
+    ("con_*", "Console / Config"),
+    ("cvarlist", "Console / Config"),
+    ("find", "Console / Config"),
+    ("help", "Console / Config"),
+    ("clear", "Console / Config"),
+    ("condump", "Console / Config"),
+    ("key_listboundkeys", "Console / Config"),
+    ("key_findbinding", "Console / Config"),
+    # Binds / Input actions (+/- and bind family) — near end so specific prefixes win first
+    ("bind", "Binds / Input actions"),
+    ("bind_osx", "Binds / Input actions"),
+    ("bindtoggle", "Binds / Input actions"),
+    ("unbind", "Binds / Input actions"),
+    ("unbindall", "Binds / Input actions"),
+    ("re:^[+\\-].+", "Binds / Input actions"),
+]
+
+
+def categorize_command(name: str) -> str:
+    lowered = name.lower()
+    for pattern, category in CATEGORY_RULES:
+        if pattern.startswith("re:"):
+            if re.search(pattern[3:], name, re.IGNORECASE):
+                return category
+            continue
+        if pattern.endswith("*"):
+            if lowered.startswith(pattern[:-1].lower()):
+                return category
+            continue
+        if lowered == pattern.lower():
+            return category
+    return DEFAULT_CATEGORY
 
 
 def fetch_text(url: str) -> str:
@@ -221,6 +357,7 @@ def parse_cvarlist(md: str) -> list[dict]:
                 "description": description,
                 "accepted": accepted,
                 "kind": kind,
+                "category": categorize_command(name),
             }
         )
     return commands
@@ -233,12 +370,14 @@ def build_catalog(md: str, enrichments: dict[str, str], source: str) -> dict:
         if enriched:
             entry["accepted"] = enriched
     commands.sort(key=lambda c: c["name"].lower())
+    categories = sorted({c["category"] for c in commands}, key=str.lower)
     return {
         "meta": {
             "source": source,
             "fetchedAt": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "count": len(commands),
             "enrichmentCount": sum(1 for c in commands if c["name"] in enrichments),
+            "categories": categories,
         },
         "commands": commands,
     }

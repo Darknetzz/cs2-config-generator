@@ -39,6 +39,7 @@
         </nav>
         <h1>CS2 Commands</h1>
         <p class="subtitle">Search and sort the full Counter-Strike 2 console command and cvar list.</p>
+        <p class="commands-legend">Gray tags under each name are ConVar flags (engine metadata: e.g. <code>cl</code> client, <code>a</code> archive/saved, <code>release</code> public, <code>cheat</code> needs sv_cheats).</p>
       </div>
       <div id="theme-toggle" class="theme-toggle" role="group" aria-label="Color theme">
         <button type="button" class="theme-btn" data-theme="system" aria-pressed="true">Auto</button>
@@ -61,6 +62,12 @@
           spellcheck="false"
           aria-label="Search commands"
         >
+      </label>
+      <label class="commands-category-label" for="commands-category">
+        <span class="commands-filter-label">Category</span>
+        <select id="commands-category" class="commands-category" aria-label="Filter by category">
+          <option value="">All categories</option>
+        </select>
       </label>
       <p id="commands-meta" class="commands-meta" aria-live="polite">Loading commands…</p>
     </div>

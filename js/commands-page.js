@@ -1,5 +1,5 @@
 /**
- * CS2 commands reference browser (search / sort / paginate).
+ * CS2 commands reference browser (search / sort / paginate / category).
  */
 (() => {
   const STORAGE_KEY = 'cs2-config-state';
@@ -8,10 +8,11 @@
   const PAGE_SIZE = 100;
   const SEARCH_DEBOUNCE_MS = 150;
   const SORT_KEYS = ['name', 'default', 'accepted', 'description'];
+  const FLAGS_TITLE = 'ConVar flags (engine metadata)';
 
-  /** @type {{ name: string, flags: string[], default: string, description: string, accepted: string, kind: string }[]} */
+  /** @type {{ name: string, flags: string[], default: string, description: string, accepted: string, kind: string, category?: string }[]} */
   let allCommands = [];
-  /** @type {{ name: string, flags: string[], default: string, description: string, accepted: string, kind: string }[]} */
+  /** @type {{ name: string, flags: string[], default: string, description: string, accepted: string, kind: string, category?: string }[]} */
   let filtered = [];
   let sortKey = 'name';
   let sortDir = 'asc';
@@ -19,9 +20,11 @@
   let colorTheme = 'system';
   let searchTimer = 0;
   let sourceNote = '';
+  let selectedCategory = '';
 
   const els = {
     search: document.getElementById('commands-search'),
+    category: document.getElementById('commands-category'),
     meta: document.getElementById('commands-meta'),
     error: document.getElementById('commands-error'),
     tbody: document.getElementById('commands-tbody'),
@@ -58,28 +61,51 @@
 
   function applyFilterAndSort() {
     const query = (els.search?.value || '').trim().toLowerCase();
-    if (!query) {
-      filtered = allCommands.slice();
-    } else {
-      filtered = allCommands.filter((cmd) => {
-        const haystack = [
-          cmd.name,
-          cmd.description,
-          cmd.default,
-          cmd.accepted,
-          (cmd.flags || []).join(' '),
-          cmd.kind,
-        ]
-          .join(' ')
-          .toLowerCase();
-        return haystack.includes(query);
-      });
-    }
+    selectedCategory = els.category?.value || '';
+
+    filtered = allCommands.filter((cmd) => {
+      if (selectedCategory && cmd.category !== selectedCategory) return false;
+      if (!query) return true;
+      const haystack = [
+        cmd.name,
+        cmd.description,
+        cmd.default,
+        cmd.accepted,
+        cmd.category,
+        (cmd.flags || []).join(' '),
+        cmd.kind,
+      ]
+        .join(' ')
+        .toLowerCase();
+      return haystack.includes(query);
+    });
+
     filtered.sort(compareCommands);
     const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE) || 1);
     if (page > totalPages) page = totalPages;
     if (page < 1) page = 1;
     render();
+  }
+
+  function populateCategories(categories) {
+    if (!els.category) return;
+    const current = els.category.value;
+    const list = Array.isArray(categories) && categories.length
+      ? categories
+      : [...new Set(allCommands.map((c) => c.category).filter(Boolean))].sort((a, b) =>
+          a.localeCompare(b)
+        );
+
+    els.category.innerHTML = '<option value="">All categories</option>';
+    list.forEach((name) => {
+      const opt = document.createElement('option');
+      opt.value = name;
+      opt.textContent = name;
+      els.category.appendChild(opt);
+    });
+    if (current && list.includes(current)) {
+      els.category.value = current;
+    }
   }
 
   function updateSortButtons() {
@@ -117,17 +143,21 @@
     if (!els.tbody) return;
     if (!slice.length) {
       els.tbody.innerHTML =
-        '<tr><td colspan="4" class="commands-empty">No commands match your search.</td></tr>';
+        '<tr><td colspan="4" class="commands-empty">No commands match your filters.</td></tr>';
     } else {
       els.tbody.innerHTML = slice
         .map((cmd) => {
           const flags = (cmd.flags || []).length
-            ? `<span class="commands-flags">${escapeHtml(cmd.flags.join(', '))}</span>`
+            ? `<span class="commands-flags" title="${escapeHtml(FLAGS_TITLE)}">${escapeHtml(cmd.flags.join(', '))}</span>`
+            : '';
+          const category = cmd.category
+            ? `<span class="commands-category-tag">${escapeHtml(cmd.category)}</span>`
             : '';
           return `<tr>
             <td class="commands-col-name">
               <code>${escapeHtml(cmd.name)}</code>
               ${flags}
+              ${category}
             </td>
             <td class="commands-col-default"><code>${escapeHtml(displayValue(cmd.default))}</code></td>
             <td class="commands-col-accepted">${escapeHtml(displayValue(cmd.accepted))}</td>
@@ -235,6 +265,7 @@
         const date = String(meta.fetchedAt).slice(0, 10);
         sourceNote = `Updated ${date} · ${meta.count ?? allCommands.length} total`;
       }
+      populateCategories(meta.categories);
       applyFilterAndSort();
     } catch (err) {
       const viaFile = location.protocol === 'file:';
@@ -253,6 +284,11 @@
         page = 1;
         applyFilterAndSort();
       }, SEARCH_DEBOUNCE_MS);
+    });
+
+    els.category?.addEventListener('change', () => {
+      page = 1;
+      applyFilterAndSort();
     });
 
     els.sortButtons.forEach((btn) => {
