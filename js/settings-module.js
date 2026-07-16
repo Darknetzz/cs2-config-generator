@@ -1,7 +1,7 @@
 /**
  * Shared factory for declarative CS2 settings sections (cvars, defaults, clamp/enable helpers).
  */
-function createSettingsModule({ id, label, fileName, groups, settings }) {
+function createSettingsModule({ id, label, fileName, icon, groups, settings }) {
   if (!id || !label || !Array.isArray(groups) || !settings || typeof settings !== 'object') {
     throw new Error('createSettingsModule requires id, label, groups, and settings');
   }
@@ -95,6 +95,7 @@ function createSettingsModule({ id, label, fileName, groups, settings }) {
   return {
     id,
     label,
+    icon: icon || id,
     fileName: fileName || id,
     SETTINGS,
     GROUPS,

@@ -156,7 +156,18 @@
               `<span class="commands-category-tag">${escapeHtml(cmd.category)}</span>`
             );
           }
-          if ((cmd.flags || []).includes('cheat')) {
+          const flagSet = cmd.flags || [];
+          if (flagSet.includes('cl')) {
+            tags.push(
+              '<span class="commands-side-tag commands-side-client" title="Client-side (cl)">client</span>'
+            );
+          }
+          if (flagSet.includes('sv')) {
+            tags.push(
+              '<span class="commands-side-tag commands-side-server" title="Server-side (sv)">server</span>'
+            );
+          }
+          if (flagSet.includes('cheat')) {
             tags.push(
               '<span class="commands-cheat-tag" title="Requires sv_cheats 1">sv_cheats</span>'
             );
@@ -321,6 +332,7 @@
   }
 
   initTheme();
+  Icons.hydrate(document.querySelector('.site-nav'));
   bindUi();
   loadData();
 })();

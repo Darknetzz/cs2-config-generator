@@ -152,6 +152,148 @@ const BindSection = (() => {
   const BY_ID = Object.fromEntries(ENTRIES.map((entry) => [entry.id, entry]));
   const CVAR_ORDER = ENTRIES.map((entry) => entry.id);
 
+  /**
+   * Common CS2 bind key names for the picker UI (values are console key names).
+   * @type {{ id: string, label: string, keys: { value: string, label?: string }[] }[]}
+   */
+  const KEY_PICKER_GROUPS = [
+    {
+      id: 'mouse',
+      label: 'Mouse',
+      keys: [
+        { value: 'mouse1', label: 'Left' },
+        { value: 'mouse2', label: 'Right' },
+        { value: 'mouse3', label: 'Middle' },
+        { value: 'mouse4', label: 'Mouse 4' },
+        { value: 'mouse5', label: 'Mouse 5' },
+        { value: 'mwheelup', label: 'Wheel up' },
+        { value: 'mwheeldown', label: 'Wheel down' },
+      ],
+    },
+    {
+      id: 'modifiers',
+      label: 'Modifiers',
+      keys: [
+        { value: 'shift' },
+        { value: 'ctrl' },
+        { value: 'alt' },
+        { value: 'capslock', label: 'Caps' },
+        { value: 'tab' },
+        { value: 'space' },
+        { value: 'enter' },
+        { value: 'backspace', label: 'Backspace' },
+        { value: 'escape', label: 'Esc' },
+      ],
+    },
+    {
+      id: 'letters',
+      label: 'Letters',
+      keys: 'abcdefghijklmnopqrstuvwxyz'.split('').map((value) => ({ value })),
+    },
+    {
+      id: 'digits',
+      label: 'Digits',
+      keys: '0123456789'.split('').map((value) => ({ value })),
+    },
+    {
+      id: 'function',
+      label: 'Function',
+      keys: Array.from({ length: 12 }, (_, i) => {
+        const value = `f${i + 1}`;
+        return { value, label: value.toUpperCase() };
+      }),
+    },
+    {
+      id: 'navigation',
+      label: 'Navigation',
+      keys: [
+        { value: 'uparrow', label: '↑' },
+        { value: 'downarrow', label: '↓' },
+        { value: 'leftarrow', label: '←' },
+        { value: 'rightarrow', label: '→' },
+        { value: 'ins', label: 'Ins' },
+        { value: 'del', label: 'Del' },
+        { value: 'home', label: 'Home' },
+        { value: 'end', label: 'End' },
+        { value: 'pgup', label: 'PgUp' },
+        { value: 'pgdn', label: 'PgDn' },
+      ],
+    },
+    {
+      id: 'other',
+      label: 'Other',
+      keys: [
+        { value: '.', label: '.' },
+        { value: ',', label: ',' },
+        { value: '/', label: '/' },
+        { value: ';', label: ';' },
+        { value: "'", label: "'" },
+        { value: '[', label: '[' },
+        { value: ']', label: ']' },
+        { value: '-', label: '-' },
+        { value: '=', label: '=' },
+        { value: '\\', label: '\\' },
+      ],
+    },
+  ];
+
+  /** Map KeyboardEvent.code → CS2 bind key name. */
+  const CODE_TO_CS2 = {
+    Space: 'space',
+    ShiftLeft: 'shift',
+    ShiftRight: 'shift',
+    ControlLeft: 'ctrl',
+    ControlRight: 'ctrl',
+    AltLeft: 'alt',
+    AltRight: 'alt',
+    CapsLock: 'capslock',
+    Tab: 'tab',
+    Enter: 'enter',
+    NumpadEnter: 'enter',
+    Backspace: 'backspace',
+    Escape: 'escape',
+    Insert: 'ins',
+    Delete: 'del',
+    Home: 'home',
+    End: 'end',
+    PageUp: 'pgup',
+    PageDown: 'pgdn',
+    ArrowUp: 'uparrow',
+    ArrowDown: 'downarrow',
+    ArrowLeft: 'leftarrow',
+    ArrowRight: 'rightarrow',
+    Period: '.',
+    Comma: ',',
+    Slash: '/',
+    Semicolon: ';',
+    Quote: "'",
+    BracketLeft: '[',
+    BracketRight: ']',
+    Minus: '-',
+    Equal: '=',
+    Backslash: '\\',
+  };
+
+  for (let i = 0; i < 26; i += 1) {
+    CODE_TO_CS2[`Key${String.fromCharCode(65 + i)}`] = String.fromCharCode(97 + i);
+  }
+  for (let i = 0; i < 10; i += 1) {
+    CODE_TO_CS2[`Digit${i}`] = String(i);
+    CODE_TO_CS2[`Numpad${i}`] = String(i);
+  }
+  for (let i = 1; i <= 12; i += 1) {
+    CODE_TO_CS2[`F${i}`] = `f${i}`;
+  }
+
+  /** Map MouseEvent.button → CS2 mouse key. */
+  const MOUSE_BUTTON_TO_CS2 = {
+    0: 'mouse1',
+    1: 'mouse3',
+    2: 'mouse2',
+    3: 'mouse4',
+    4: 'mouse5',
+  };
+
   /** Label map so section summary / helpers can look up by id like SETTINGS. */
   const SETTINGS = Object.fromEntries(
     ENTRIES.map((entry) => [entry.id, {
@@ -167,7 +309,40 @@ const BindSection = (() => {
   function isValidKey(key) {
     if (!key) return false;
     if (/\s/.test(key)) return false;
-    return /^[\w.+,-]+$/i.test(key) || key === '.' || key === ',';
+    return /^[\w.+,-]+$/i.test(key) || key === '.' || key === ',' || key === '/'
+      || key === ';' || key === "'" || key === '[' || key === ']'
+      || key === '-' || key === '=' || key === '\\';
+  }
+
+  /**
+   * Resolve a KeyboardEvent to a CS2 key name, or null if unsupported.
+   * @param {KeyboardEvent} event
+   */
+  function keyFromKeyboardEvent(event) {
+    if (!event || event.repeat) return null;
+    const fromCode = CODE_TO_CS2[event.code];
+    if (fromCode) return fromCode;
+    const key = normalizeKey(event.key);
+    if (key.length === 1 && isValidKey(key)) return key;
+    return null;
+  }
+
+  /**
+   * Resolve a MouseEvent button to a CS2 mouse key, or null.
+   * @param {MouseEvent} event
+   */
+  function keyFromMouseEvent(event) {
+    if (!event || event.button == null) return null;
+    return MOUSE_BUTTON_TO_CS2[event.button] || null;
+  }
+
+  /**
+   * Resolve a wheel delta to mwheelup / mwheeldown.
+   * @param {WheelEvent} event
+   */
+  function keyFromWheelEvent(event) {
+    if (!event || !event.deltaY) return null;
+    return event.deltaY < 0 ? 'mwheelup' : 'mwheeldown';
   }
 
   function createEntryDefault(entry) {
@@ -341,12 +516,14 @@ const BindSection = (() => {
   return {
     id: 'binds',
     label: 'Binds',
+    icon: 'binds',
     fileName: 'binds',
     kind: 'binds',
     GROUPS,
     ENTRIES,
     BY_ID,
     ALIAS_DEFS,
+    KEY_PICKER_GROUPS,
     SETTINGS,
     CVAR_ORDER,
     createDefaultState,
@@ -359,6 +536,9 @@ const BindSection = (() => {
     collectDelta,
     normalizeKey,
     isValidKey,
+    keyFromKeyboardEvent,
+    keyFromMouseEvent,
+    keyFromWheelEvent,
     entryPreviewLines,
     findEntryForBindCommand,
     findEntryForAliasName,

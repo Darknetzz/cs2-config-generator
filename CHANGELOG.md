@@ -9,13 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Icons on site nav links and config section tabs
 - Larger preview column and click-to-expand live preview modal (crosshair, viewmodel, radar)
 - GitHub repository link in the site header nav
 - Lightweight syntax highlighting in the config export editor (numbers and quoted strings)
+- Bind key picker (keyboard icon) with categorized CS2 keys, mouse buttons, and press-to-capture
 - Commands reference page (`commands.html`) with searchable/sortable CS2 console command and cvar catalog
 - Prefix-based category filters on the Commands page (Crosshair, HUD, Radar, etc.)
 - ConVar flag legend and tooltips explaining engine metadata under each command name
 - `sv_cheats` badge on Commands that require cheats enabled
+- Client / server badges on Commands derived from `cl` / `sv` flags
 - Script to refresh the command catalog from the ArminC CS2 cvar dump (`scripts/refresh-cs2-commands.py`)
 
 ### Changed

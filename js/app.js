@@ -20,6 +20,8 @@
   let deletedPresetUndo = null;
   let previewModalSection = null;
   let previewModalOpener = null;
+  let keyPickerBindId = null;
+  let keyPickerListening = false;
 
   const PREVIEW_MODAL_TITLES = {
     crosshair: 'Crosshair preview',
@@ -49,6 +51,13 @@
     previewModalTitle: document.getElementById('preview-modal-title'),
     previewModalClose: document.getElementById('preview-modal-close'),
     previewModalCanvas: document.getElementById('preview-modal-canvas'),
+    bindKeyPicker: document.getElementById('bind-key-picker'),
+    bindKeyPickerTitle: document.getElementById('bind-key-picker-title'),
+    bindKeyPickerSubtitle: document.getElementById('bind-key-picker-subtitle'),
+    bindKeyPickerClose: document.getElementById('bind-key-picker-close'),
+    bindKeyPickerListen: document.getElementById('bind-key-picker-listen'),
+    bindKeyPickerHint: document.getElementById('bind-key-picker-hint'),
+    bindKeyPickerGroups: document.getElementById('bind-key-picker-groups'),
     canvasWrap: document.getElementById('crosshair-canvas-wrap'),
     viewmodelCanvasWrap: document.getElementById('viewmodel-canvas-wrap'),
     radarCanvasWrap: document.getElementById('radar-canvas-wrap'),
@@ -708,6 +717,9 @@
         row.classList.toggle('bind-row-invalid', invalid);
       }
 
+      const pickerBtn = row.querySelector('.bind-key-picker-btn');
+      if (pickerBtn) pickerBtn.disabled = !enabled;
+
       const preview = row.querySelector('.bind-preview');
       if (preview) {
         preview.textContent = section.entryPreviewLines(entry, entryState).join('\n');
@@ -749,6 +761,176 @@
     syncBindControlsFromState();
     refresh();
     showToast(`${entry.label} reset`);
+  }
+
+  function createBindKeyPickerButton(entry) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'setting-reset-btn bind-key-picker-btn';
+    btn.dataset.pickBind = entry.id;
+    btn.title = 'Choose key';
+    btn.setAttribute('aria-label', `Choose key for ${entry.label}`);
+    btn.disabled = !sectionsState.binds[entry.id]?.enabled;
+    const icon = Icons.create('binds');
+    if (icon) {
+      icon.classList.remove('nav-icon');
+      btn.append(icon);
+    } else {
+      btn.textContent = '⌨';
+    }
+    btn.addEventListener('click', () => openBindKeyPicker(entry.id));
+    return btn;
+  }
+
+  function buildBindKeyPickerGroups() {
+    if (!els.bindKeyPickerGroups) return;
+    els.bindKeyPickerGroups.replaceChildren();
+
+    for (const group of BindSection.KEY_PICKER_GROUPS) {
+      const section = document.createElement('section');
+      section.className = 'bind-key-picker-group';
+      section.dataset.group = group.id;
+
+      const label = document.createElement('h3');
+      label.className = 'bind-key-picker-group-label';
+      label.textContent = group.label;
+
+      const grid = document.createElement('div');
+      grid.className = 'bind-key-picker-grid';
+      grid.setAttribute('role', 'group');
+      grid.setAttribute('aria-label', group.label);
+
+      for (const key of group.keys) {
+        const keyBtn = document.createElement('button');
+        keyBtn.type = 'button';
+        keyBtn.className = 'bind-key-btn';
+        keyBtn.dataset.key = key.value;
+        keyBtn.textContent = key.label || key.value;
+        keyBtn.title = key.value;
+        keyBtn.addEventListener('click', () => applyPickedBindKey(key.value));
+        grid.append(keyBtn);
+      }
+
+      section.append(label, grid);
+      els.bindKeyPickerGroups.append(section);
+    }
+  }
+
+  function syncBindKeyPickerSelection() {
+    if (!els.bindKeyPickerGroups || !keyPickerBindId) return;
+    const current = BindSection.normalizeKey(sectionsState.binds[keyPickerBindId]?.key);
+    els.bindKeyPickerGroups.querySelectorAll('.bind-key-btn').forEach((btn) => {
+      btn.classList.toggle('is-current', btn.dataset.key === current);
+    });
+  }
+
+  function setKeyPickerListening(active) {
+    keyPickerListening = Boolean(active);
+    els.bindKeyPickerListen?.classList.toggle('is-listening', keyPickerListening);
+    if (els.bindKeyPickerListen) {
+      els.bindKeyPickerListen.textContent = keyPickerListening
+        ? 'Listening… press a key or mouse button'
+        : 'Press a key or mouse button…';
+    }
+    if (els.bindKeyPickerHint) {
+      els.bindKeyPickerHint.textContent = keyPickerListening
+        ? 'Click empty dialog space or scroll over this button for mouse/wheel. Esc stops listening.'
+        : 'Or pick from the list below.';
+    }
+  }
+
+  function openBindKeyPicker(bindId) {
+    const entry = BindSection.BY_ID[bindId];
+    if (!entry || entry.kind === 'package' || !els.bindKeyPicker) return;
+
+    keyPickerBindId = bindId;
+    if (els.bindKeyPickerSubtitle) {
+      els.bindKeyPickerSubtitle.textContent = entry.label;
+    }
+    syncBindKeyPickerSelection();
+    setKeyPickerListening(true);
+    if (!els.bindKeyPicker.open) {
+      els.bindKeyPicker.showModal();
+    }
+    els.bindKeyPickerListen?.focus();
+  }
+
+  function closeBindKeyPicker() {
+    if (els.bindKeyPicker?.open) {
+      els.bindKeyPicker.close();
+    }
+  }
+
+  function onBindKeyPickerClosed() {
+    keyPickerBindId = null;
+    setKeyPickerListening(false);
+  }
+
+  function applyPickedBindKey(key) {
+    if (!keyPickerBindId || !key) return;
+    const id = keyPickerBindId;
+    setBindKey(id, key);
+    const input = document.getElementById(`bind-key-${id}`);
+    if (input) input.value = BindSection.normalizeKey(key);
+    closeBindKeyPicker();
+    showToast(`Key set to ${BindSection.normalizeKey(key)}`);
+  }
+
+  function onKeyPickerCaptureKeydown(event) {
+    if (!els.bindKeyPicker?.open || !keyPickerListening) return;
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      setKeyPickerListening(false);
+      return;
+    }
+    const key = BindSection.keyFromKeyboardEvent(event);
+    if (!key) return;
+    event.preventDefault();
+    event.stopPropagation();
+    applyPickedBindKey(key);
+  }
+
+  function onKeyPickerCaptureMouse(event) {
+    if (!els.bindKeyPicker?.open || !keyPickerListening) return;
+    // Keep list / chrome clicks normal; capture mouse elsewhere in the dialog.
+    if (event.target.closest('button, .bind-key-picker-groups')) return;
+    const key = BindSection.keyFromMouseEvent(event);
+    if (!key) return;
+    event.preventDefault();
+    applyPickedBindKey(key);
+  }
+
+  function onKeyPickerCaptureWheel(event) {
+    if (!els.bindKeyPicker?.open || !keyPickerListening) return;
+    // Capture wheel on the toolbar so the key list can still scroll.
+    if (!event.target.closest('.bind-key-picker-toolbar')) return;
+    const key = BindSection.keyFromWheelEvent(event);
+    if (!key) return;
+    event.preventDefault();
+    applyPickedBindKey(key);
+  }
+
+  function onKeyPickerCaptureContextMenu(event) {
+    if (!els.bindKeyPicker?.open || !keyPickerListening) return;
+    if (event.target.closest('button, .bind-key-picker-groups')) return;
+    event.preventDefault();
+  }
+
+  function initBindKeyPicker() {
+    if (!els.bindKeyPicker) return;
+    buildBindKeyPickerGroups();
+    els.bindKeyPickerClose?.addEventListener('click', () => closeBindKeyPicker());
+    els.bindKeyPickerListen?.addEventListener('click', () => {
+      setKeyPickerListening(!keyPickerListening);
+    });
+    els.bindKeyPicker.addEventListener('close', onBindKeyPickerClosed);
+    els.bindKeyPicker.addEventListener('click', (event) => {
+      if (event.target === els.bindKeyPicker) closeBindKeyPicker();
+    });
+    els.bindKeyPicker.addEventListener('keydown', onKeyPickerCaptureKeydown);
+    els.bindKeyPicker.addEventListener('mousedown', onKeyPickerCaptureMouse);
+    els.bindKeyPicker.addEventListener('wheel', onKeyPickerCaptureWheel, { passive: false });
+    els.bindKeyPicker.addEventListener('contextmenu', onKeyPickerCaptureContextMenu);
   }
 
   function createRangeControl(section, key, meta) {
@@ -1214,7 +1396,7 @@
 
     const intro = document.createElement('p');
     intro.className = 'binds-intro muted';
-    intro.textContent = 'Enable binds to include them in export. Keys use CS2 names (v, mouse5, mwheeldown).';
+    intro.textContent = 'Enable binds to include them in export. Use the keyboard button to pick keys (including mouse buttons), or type CS2 names (v, mouse5, mwheeldown).';
     mount.append(intro);
 
     for (const group of section.GROUPS) {
@@ -1300,7 +1482,7 @@
       keyInput.placeholder = entry.defaultKey || 'key';
       keyInput.disabled = !state?.enabled;
       keyInput.addEventListener('input', () => setBindKey(entry.id, keyInput.value));
-      controls.append(keyLabel, keyInput);
+      controls.append(keyLabel, keyInput, createBindKeyPickerButton(entry));
     } else {
       const packageNote = document.createElement('span');
       packageNote.className = 'bind-package-note muted';
@@ -1406,7 +1588,7 @@
       btn.id = `section-tab-${section.id}`;
       btn.dataset.section = section.id;
       btn.setAttribute('aria-selected', section.id === activeSectionId ? 'true' : 'false');
-      btn.textContent = section.label;
+      btn.append(Icons.labeled(section.icon || section.id, section.label));
       btn.addEventListener('click', () => setActiveSection(section.id));
       els.sectionTabs.append(btn);
     }
@@ -1629,6 +1811,9 @@
         keyInput.value = entryState?.key ?? entry.defaultKey;
         keyInput.disabled = !entryState?.enabled;
       }
+
+      const pickerBtn = document.querySelector(`[data-pick-bind="${entry.id}"]`);
+      if (pickerBtn) pickerBtn.disabled = !entryState?.enabled;
 
       const row = document.querySelector(`[data-bind-id="${entry.id}"]`);
       const preview = row?.querySelector('.bind-preview');
@@ -1912,7 +2097,9 @@
 
     initPreviewCanvas();
     initPreviewModal();
+    initBindKeyPicker();
     initThemeToggle();
+    Icons.hydrate(document.querySelector('.site-nav'));
     initPreviewZoom();
     initPreviewMode();
     initViewmodelWeaponToggle();

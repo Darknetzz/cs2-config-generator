@@ -59,6 +59,7 @@ Do not rewrite published version sections; put follow-ups under `[Unreleased]` o
 
 | Area | Role |
 |------|------|
+| `js/icons.js` | Shared SVG icons for site nav and section tabs |
 | `js/settings-module.js` | Factory for declarative cvar sections (`createSettingsModule`) |
 | `js/crosshair-settings.js` | Crosshair schema + UI helpers; defines `CrosshairSection` |
 | `js/sections/*.js` | Other sections (`ViewmodelSection`, `HudSection`, …) |
@@ -74,13 +75,13 @@ Do not rewrite published version sections; put follow-ups under `[Unreleased]` o
 | `js/app.js` | UI, state, persistence (`localStorage`), share URLs |
 | `js/presets.js` / `custom-presets.js` | Pro + user crosshair presets |
 
-**Script load order in `index.html` is load-bearing.** New scripts must be inserted so dependencies exist before consumers (`settings-module` → section files → `sections/index.js` → helpers/renderers → `commands.js` → `app.js`). `commands.html` only loads `js/commands-page.js`.
+**Script load order in `index.html` is load-bearing.** New scripts must be inserted so dependencies exist before consumers (`icons.js` → `settings-module` → section files → `sections/index.js` → helpers/renderers → `commands.js` → `app.js`). `commands.html` loads `js/icons.js` then `js/commands-page.js`.
 
 ## Adding or changing settings
 
-Prefer `createSettingsModule({ id, label, fileName, groups, settings })`:
+Prefer `createSettingsModule({ id, label, fileName, icon, groups, settings })`:
 
-1. Define `groups` (UI group order) and `settings` metadata (`type`: `range` | `toggle` | `select`, plus `default`, `min`/`max`/`step`, `options`, optional `enabledWhen`).
+1. Define `groups` (UI group order) and `settings` metadata (`type`: `range` | `toggle` | `select`, plus `default`, `min`/`max`/`step`, `options`, optional `enabledWhen`). Optional `icon` defaults to `id` and must match a key in `Icons.PATHS`.
 2. Register the section in `js/sections/index.js` `ALL` (and add a `<script>` tag if the file is new).
 3. Export/import flows through `ConfigCommands` automatically for standard sections.
 

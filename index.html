@@ -37,9 +37,9 @@
     <div class="site-header-inner">
       <div class="site-header-text">
         <nav class="site-nav" aria-label="Site">
-          <a href="index.html" aria-current="page">Config Generator</a>
-          <a href="commands.html">Commands</a>
-          <a href="https://github.com/Darknetzz/cs2-config-generator" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <a href="index.html" data-icon="generator" aria-current="page">Config Generator</a>
+          <a href="commands.html" data-icon="commands">Commands</a>
+          <a href="https://github.com/Darknetzz/cs2-config-generator" data-icon="github" target="_blank" rel="noopener noreferrer">GitHub</a>
         </nav>
         <h1>CS2 Config Generator</h1>
         <p class="subtitle">Build crosshair, viewmodel, HUD, radar, FPS, and binds — preview crosshair, viewmodel, and radar live, then copy or download a .cfg.</p>
@@ -270,6 +270,26 @@
     </div>
   </dialog>
 
+  <dialog id="bind-key-picker" class="bind-key-picker" aria-labelledby="bind-key-picker-title">
+    <div class="bind-key-picker-inner">
+      <div class="bind-key-picker-header">
+        <div class="bind-key-picker-heading">
+          <h2 id="bind-key-picker-title">Choose key</h2>
+          <p id="bind-key-picker-subtitle" class="bind-key-picker-subtitle muted"></p>
+        </div>
+        <button type="button" id="bind-key-picker-close" class="preview-modal-close" aria-label="Close key picker">&times;</button>
+      </div>
+      <div class="bind-key-picker-toolbar">
+        <button type="button" id="bind-key-picker-listen" class="btn btn-primary bind-key-picker-listen">
+          Press a key or mouse button…
+        </button>
+        <p id="bind-key-picker-hint" class="bind-key-picker-hint muted">Or pick from the list below.</p>
+      </div>
+      <div id="bind-key-picker-groups" class="bind-key-picker-groups"></div>
+    </div>
+  </dialog>
+
+  <script src="js/icons.js"></script>
   <script src="js/settings-module.js"></script>
   <script src="js/crosshair-settings.js"></script>
   <script src="js/sections/viewmodel.js"></script>

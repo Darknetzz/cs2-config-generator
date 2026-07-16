@@ -34,13 +34,13 @@
     <div class="site-header-inner">
       <div class="site-header-text">
         <nav class="site-nav" aria-label="Site">
-          <a href="index.html">Config Generator</a>
-          <a href="commands.html" aria-current="page">Commands</a>
-          <a href="https://github.com/Darknetzz/cs2-config-generator" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <a href="index.html" data-icon="generator">Config Generator</a>
+          <a href="commands.html" data-icon="commands" aria-current="page">Commands</a>
+          <a href="https://github.com/Darknetzz/cs2-config-generator" data-icon="github" target="_blank" rel="noopener noreferrer">GitHub</a>
         </nav>
         <h1>CS2 Commands</h1>
         <p class="subtitle">Search and sort the full Counter-Strike 2 console command and cvar list.</p>
-        <p class="commands-legend">Gray tags under each name are ConVar flags (engine metadata: e.g. <code>cl</code> client, <code>a</code> archive/saved, <code>release</code> public). An <strong>sv_cheats</strong> badge means the command needs <code>sv_cheats 1</code>.</p>
+        <p class="commands-legend">Gray tags under each name are ConVar flags (engine metadata: e.g. <code>a</code> archive/saved, <code>release</code> public). Badges: <strong>client</strong> / <strong>server</strong> from <code>cl</code>/<code>sv</code> flags; <strong>sv_cheats</strong> means the command needs <code>sv_cheats 1</code>.</p>
       </div>
       <div id="theme-toggle" class="theme-toggle" role="group" aria-label="Color theme">
         <button type="button" class="theme-btn" data-theme="system" aria-pressed="true">Auto</button>
@@ -104,6 +104,7 @@
     </div>
   </main>
 
+  <script src="js/icons.js"></script>
   <script src="js/commands-page.js"></script>
 </body>
 </html>

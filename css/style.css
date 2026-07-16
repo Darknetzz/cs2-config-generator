@@ -120,6 +120,9 @@ body {
 }
 
 .site-nav a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   color: var(--muted);
   text-decoration: none;
   font-weight: 500;
@@ -211,6 +214,9 @@ body {
 }
 
 .section-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
   padding: 0.45rem 0.9rem;
   font-size: 0.85rem;
   font-weight: 500;
@@ -220,6 +226,13 @@ body {
   color: var(--text);
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.nav-icon {
+  flex-shrink: 0;
+  width: 1em;
+  height: 1em;
+  opacity: 0.9;
 }
 
 .section-tab:hover {
@@ -1191,6 +1204,139 @@ body {
   overflow-x: auto;
 }
 
+.bind-key-picker-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bind-key-picker-btn svg {
+  width: 0.95rem;
+  height: 0.95rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.bind-key-picker {
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow);
+  width: min(36rem, calc(100vw - 1.5rem));
+  max-height: min(85vh, 40rem);
+}
+
+.bind-key-picker::backdrop {
+  background: rgba(0, 0, 0, 0.55);
+}
+
+.bind-key-picker-inner {
+  display: flex;
+  flex-direction: column;
+  max-height: min(85vh, 40rem);
+}
+
+.bind-key-picker-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.bind-key-picker-heading h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.bind-key-picker-subtitle {
+  margin: 0.2rem 0 0;
+  font-size: 0.82rem;
+}
+
+.bind-key-picker-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.75rem 1rem 0.35rem;
+}
+
+.bind-key-picker-listen {
+  width: 100%;
+  justify-content: center;
+}
+
+.bind-key-picker-listen.is-listening {
+  background: color-mix(in srgb, var(--accent) 22%, var(--surface-raised));
+  border-color: var(--accent);
+  color: var(--text);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.bind-key-picker-hint {
+  margin: 0;
+  font-size: 0.78rem;
+}
+
+.bind-key-picker-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: 0.5rem 1rem 1rem;
+  overflow: auto;
+}
+
+.bind-key-picker-group-label {
+  margin: 0 0 0.4rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.bind-key-picker-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.bind-key-btn {
+  min-width: 2.4rem;
+  padding: 0.35rem 0.55rem;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  line-height: 1.2;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface-raised);
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+
+.bind-key-btn:hover {
+  border-color: var(--accent);
+}
+
+.bind-key-btn.is-current {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-text);
+  font-weight: 600;
+}
+
+.bind-key-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 @media (max-width: 520px) {
   .bind-row-header {
     grid-template-columns: auto minmax(0, 1fr);
@@ -1941,6 +2087,7 @@ th[aria-sort="descending"] .sort-btn::after {
 }
 
 .commands-category-tag,
+.commands-side-tag,
 .commands-cheat-tag {
   display: inline-block;
   padding: 0.1rem 0.4rem;
@@ -1953,6 +2100,28 @@ th[aria-sort="descending"] .sort-btn::after {
 
 .commands-category-tag {
   color: var(--muted);
+}
+
+.commands-side-client {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.commands-side-server {
+  color: #58a6ff;
+  border-color: #58a6ff;
+}
+
+:root[data-theme="light"] .commands-side-server {
+  color: #0969da;
+  border-color: #0969da;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]):not([data-theme="light"]) .commands-side-server {
+    color: #0969da;
+    border-color: #0969da;
+  }
 }
 
 .commands-cheat-tag {
