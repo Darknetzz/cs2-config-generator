@@ -394,9 +394,10 @@ const CrosshairRenderer = (() => {
     const style = state.cl_crosshairstyle;
     const useWeapon = state.cl_crosshairgap_useweaponvalue === 1;
 
-    if (!useWeapon) {
-      if (style === 4) return state.cl_fixedcrosshairgap;
-      if (style === 5) return state.cl_crosshairgap;
+    // Valve: cl_fixedcrosshairgap applies to style 1 (static default).
+    // Styles 0 and 2–5 use cl_crosshairgap (including classic static style 4).
+    if (!useWeapon && style === 1) {
+      return state.cl_fixedcrosshairgap;
     }
 
     return state.cl_crosshairgap;

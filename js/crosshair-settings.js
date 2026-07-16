@@ -251,13 +251,14 @@ const CROSSHAIR_SETTINGS = {
   },
   cl_fixedcrosshairgap: {
     label: 'Fixed gap',
-    description: 'Alternative fixed gap for classic crosshair styles.',
+    description: 'Gap between the pips for style 1 (static default). Other styles use Gap above.',
     type: 'range',
     default: 3,
     min: -10,
     max: 10,
     step: 0.5,
-    enabledWhen: { key: 'cl_crosshairgap_useweaponvalue', value: 0 },
+    enabledWhen: { key: 'cl_crosshairstyle', value: 1 },
+    hideWhenDisabled: true,
   },
   cl_crosshair_dynamic_splitdist: {
     label: 'Dynamic split distance',
