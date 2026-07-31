@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Site nav links styled as prominent pill buttons (clearer current-page state)
 - Radar preview uses in-game Ancient minimap plates (round/square chrome, zone label, CS2-style icons) instead of a schematic placeholder
 - Commands catalog merges ArminC (broad/hidden) + Nihilnia (fresher public) dumps by default
 - Bind export and editor previews label each bind with a `//` comment and separate blocks with a blank line
