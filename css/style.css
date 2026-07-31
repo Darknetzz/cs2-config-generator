@@ -1217,6 +1217,79 @@ body {
   white-space: nowrap;
 }
 
+.bind-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding: 0.55rem 0.65rem;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.bind-items.is-empty {
+  border-color: #dc2626;
+}
+
+.bind-items-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.bind-items-group-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.bind-items-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.bind-item-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.28rem 0.55rem;
+  font-size: 0.78rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  user-select: none;
+}
+
+.bind-item-chip:has(.bind-item-check:checked) {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+}
+
+.bind-item-chip:has(.bind-item-check:disabled) {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.bind-item-check {
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.bind-items-hint {
+  display: none;
+  margin: 0;
+  font-size: 0.75rem;
+}
+
+.bind-items.is-empty .bind-items-hint {
+  display: block;
+}
+
 .bind-preview {
   margin: 0;
   padding: 0.55rem 0.65rem;

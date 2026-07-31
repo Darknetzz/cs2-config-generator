@@ -3,6 +3,7 @@
  */
 const BindSection = (() => {
   const GROUPS = [
+    { id: 'buy', label: 'Buy' },
     { id: 'utility', label: 'Utility' },
     { id: 'fun', label: 'Fun' },
     { id: 'practice', label: 'Practice' },
@@ -46,7 +47,171 @@ const BindSection = (() => {
     'slot10; switchhands',
   ];
 
+  /** Buy-menu item ids accepted by CS2 `buy <id>`. */
+  const BUY_WEAPON_GROUPS = [
+    {
+      id: 'rifles',
+      label: 'Rifles',
+      items: [
+        { id: 'ak47', label: 'AK-47' },
+        { id: 'm4a1', label: 'M4A4' },
+        { id: 'm4a1_silencer', label: 'M4A1-S' },
+        { id: 'galilar', label: 'Galil' },
+        { id: 'famas', label: 'FAMAS' },
+        { id: 'aug', label: 'AUG' },
+        { id: 'sg556', label: 'SG 553' },
+      ],
+    },
+    {
+      id: 'snipers',
+      label: 'Snipers',
+      items: [
+        { id: 'awp', label: 'AWP' },
+        { id: 'ssg08', label: 'SSG 08' },
+        { id: 'g3sg1', label: 'G3SG1' },
+        { id: 'scar20', label: 'SCAR-20' },
+      ],
+    },
+    {
+      id: 'smgs',
+      label: 'SMGs',
+      items: [
+        { id: 'mac10', label: 'MAC-10' },
+        { id: 'mp9', label: 'MP9' },
+        { id: 'mp7', label: 'MP7' },
+        { id: 'mp5sd', label: 'MP5-SD' },
+        { id: 'ump45', label: 'UMP-45' },
+        { id: 'p90', label: 'P90' },
+        { id: 'bizon', label: 'PP-Bizon' },
+      ],
+    },
+    {
+      id: 'heavy',
+      label: 'Heavy',
+      items: [
+        { id: 'nova', label: 'Nova' },
+        { id: 'xm1014', label: 'XM1014' },
+        { id: 'mag7', label: 'MAG-7' },
+        { id: 'sawedoff', label: 'Sawed-Off' },
+        { id: 'm249', label: 'M249' },
+        { id: 'negev', label: 'Negev' },
+      ],
+    },
+    {
+      id: 'pistols',
+      label: 'Pistols',
+      items: [
+        { id: 'deagle', label: 'Desert Eagle' },
+        { id: 'revolver', label: 'R8 Revolver' },
+        { id: 'tec9', label: 'Tec-9' },
+        { id: 'fiveseven', label: 'Five-SeveN' },
+        { id: 'cz75a', label: 'CZ75-Auto' },
+        { id: 'p250', label: 'P250' },
+        { id: 'elite', label: 'Dual Berettas' },
+        { id: 'usp_silencer', label: 'USP-S' },
+        { id: 'hkp2000', label: 'P2000' },
+        { id: 'glock', label: 'Glock-18' },
+      ],
+    },
+    {
+      id: 'gear',
+      label: 'Gear',
+      items: [
+        { id: 'vesthelm', label: 'Kevlar + Helmet' },
+        { id: 'vest', label: 'Kevlar' },
+        { id: 'taser', label: 'Zeus' },
+        { id: 'defuser', label: 'Defuse Kit' },
+      ],
+    },
+  ];
+
+  const BUY_GRENADE_ITEMS = [
+    { id: 'flashbang', label: 'Flashbang' },
+    { id: 'smokegrenade', label: 'Smoke' },
+    { id: 'hegrenade', label: 'HE Grenade' },
+    { id: 'molotov', label: 'Molotov (T)' },
+    { id: 'incgrenade', label: 'Incendiary (CT)' },
+    { id: 'decoy', label: 'Decoy' },
+  ];
+
+  function flattenItemGroups(groups) {
+    return groups.flatMap((group) => group.items);
+  }
+
+  const BUY_WEAPON_ITEMS = flattenItemGroups(BUY_WEAPON_GROUPS);
+
   const ENTRIES = [
+    {
+      id: 'buyDefault',
+      group: 'buy',
+      label: 'Buy default',
+      description: 'Run autobuy (cl_autobuy order). Default key is F3 in stock CS2.',
+      defaultKey: 'f3',
+      bindCommand: 'autobuy',
+    },
+    {
+      id: 'buyWeapons',
+      group: 'buy',
+      label: 'Buy weapons / gear',
+      description: 'Buy the selected weapons and gear on one key. Items must be in your loadout; unaffordable buys are skipped.',
+      defaultKey: 'f4',
+      kind: 'items',
+      itemMode: 'buy',
+      itemGroups: BUY_WEAPON_GROUPS,
+      items: BUY_WEAPON_ITEMS,
+      defaultItems: ['ak47', 'm4a1_silencer', 'vesthelm'],
+    },
+    {
+      id: 'buyGrenades',
+      group: 'buy',
+      label: 'Buy grenades',
+      description: 'Buy the selected grenades on one key. Include both molotov and incendiary for T/CT.',
+      defaultKey: 'f5',
+      kind: 'items',
+      itemMode: 'buy',
+      items: BUY_GRENADE_ITEMS,
+      defaultItems: ['flashbang', 'smokegrenade', 'hegrenade', 'molotov', 'incgrenade'],
+    },
+    {
+      id: 'switchFlash',
+      group: 'utility',
+      label: 'Switch to flashbang',
+      description: 'Equip flashbang (use weapon_flashbang).',
+      defaultKey: 'c',
+      bindCommand: 'use weapon_flashbang',
+    },
+    {
+      id: 'switchSmoke',
+      group: 'utility',
+      label: 'Switch to smoke',
+      description: 'Equip smoke grenade.',
+      defaultKey: 'x',
+      bindCommand: 'use weapon_smokegrenade',
+    },
+    {
+      id: 'switchHE',
+      group: 'utility',
+      label: 'Switch to HE',
+      description: 'Equip HE grenade.',
+      defaultKey: 'z',
+      bindCommand: 'use weapon_hegrenade',
+    },
+    {
+      id: 'switchMolly',
+      group: 'utility',
+      label: 'Switch to molotov',
+      description: 'Equip molotov or incendiary (works on both sides).',
+      defaultKey: 't',
+      bindCommand: 'use weapon_molotov; use weapon_incgrenade',
+    },
+    {
+      id: 'switchDecoy',
+      group: 'utility',
+      label: 'Switch to decoy',
+      description: 'Equip decoy grenade.',
+      defaultKey: '6',
+      bindCommand: 'use weapon_decoy',
+    },
     {
       id: 'dropBomb',
       group: 'utility',
@@ -345,11 +510,43 @@ const BindSection = (() => {
     return event.deltaY < 0 ? 'mwheelup' : 'mwheeldown';
   }
 
+  function entryItemIds(entry) {
+    return (entry.items || []).map((item) => item.id);
+  }
+
+  function clampItems(entry, rawItems) {
+    const allowed = new Set(entryItemIds(entry));
+    const source = Array.isArray(rawItems) ? rawItems : (entry.defaultItems || []);
+    const selected = new Set(
+      source.map((id) => String(id)).filter((id) => allowed.has(id)),
+    );
+    return entryItemIds(entry).filter((id) => selected.has(id));
+  }
+
+  function itemsEqual(a, b) {
+    if (a.length !== b.length) return false;
+    return a.every((id, index) => id === b[index]);
+  }
+
+  /** Build the console command string for an entry given clamped state. */
+  function resolveBindCommand(entry, entryState) {
+    if (entry.kind === 'items' && entry.itemMode === 'buy') {
+      const items = clampItems(entry, entryState?.items);
+      if (!items.length) return '';
+      return items.map((id) => `buy ${id}`).join('; ');
+    }
+    return entry.bindCommand || '';
+  }
+
   function createEntryDefault(entry) {
-    return {
+    const base = {
       enabled: false,
       key: entry.defaultKey || '',
     };
+    if (entry.kind === 'items') {
+      base.items = clampItems(entry, entry.defaultItems);
+    }
+    return base;
   }
 
   function createDefaultState() {
@@ -372,7 +569,13 @@ const BindSection = (() => {
       key = defaults.key;
     }
 
-    return { enabled, key };
+    const result = { enabled, key };
+    if (entry.kind === 'items') {
+      result.items = raw.items === undefined
+        ? defaults.items
+        : clampItems(entry, raw.items);
+    }
+    return result;
   }
 
   function clamp(id, raw) {
@@ -386,8 +589,12 @@ const BindSection = (() => {
     if (!entry) return true;
     const current = clampEntry(entry, state?.[id]);
     const defaults = createEntryDefault(entry);
-    return current.enabled === defaults.enabled
-      && normalizeKey(current.key) === normalizeKey(defaults.key);
+    if (current.enabled !== defaults.enabled) return false;
+    if (normalizeKey(current.key) !== normalizeKey(defaults.key)) return false;
+    if (entry.kind === 'items' && !itemsEqual(current.items || [], defaults.items || [])) {
+      return false;
+    }
+    return true;
   }
 
   function isEnabled() {
@@ -417,8 +624,9 @@ const BindSection = (() => {
       return entry.packageBinds.map((item) => formatBind(item.key, item.command));
     }
     const key = normalizeKey(entryState?.key) || entry.defaultKey;
-    if (!key || !entry.bindCommand) return [];
-    return [formatBind(key, entry.bindCommand)];
+    const command = resolveBindCommand(entry, entryState);
+    if (!key || !command) return [];
+    return [formatBind(key, command)];
   }
 
   function entryAliasLines(entry) {
@@ -488,15 +696,54 @@ const BindSection = (() => {
   }
 
   /**
+   * Parse semicolon-separated `buy <id>` commands into item ids, or null if mixed.
+   * @param {string} command
+   * @returns {string[] | null}
+   */
+  function parseBuyItemIds(command) {
+    const parts = String(command).split(';').map((part) => part.trim()).filter(Boolean);
+    if (!parts.length) return null;
+    const ids = [];
+    for (const part of parts) {
+      const match = part.match(/^buy\s+(\S+)$/i);
+      if (!match) return null;
+      ids.push(match[1].toLowerCase());
+    }
+    return ids;
+  }
+
+  /**
    * Best-effort match of a bind command string to a catalog entry.
    */
   function findEntryForBindCommand(command) {
     const normalized = String(command).trim().replace(/^"|"$/g, '');
     for (const entry of ENTRIES) {
-      if (entry.kind === 'package') continue;
+      if (entry.kind === 'package' || entry.kind === 'items') continue;
       if (entry.bindCommand === normalized) return entry;
     }
-    return null;
+
+    const buyIds = parseBuyItemIds(normalized);
+    if (!buyIds) return null;
+
+    let best = null;
+    let bestExtra = Infinity;
+    for (const entry of ENTRIES) {
+      if (entry.kind !== 'items' || entry.itemMode !== 'buy') continue;
+      const allowed = new Set(entryItemIds(entry));
+      if (!buyIds.every((id) => allowed.has(id))) continue;
+      const extra = allowed.size - new Set(buyIds).size;
+      if (extra < bestExtra) {
+        best = entry;
+        bestExtra = extra;
+      }
+    }
+    return best;
+  }
+
+  /** Item ids from a buy-command string that belong to an items entry. */
+  function itemsFromBuyCommand(entry, command) {
+    if (!entry || entry.kind !== 'items') return [];
+    return clampItems(entry, parseBuyItemIds(command) || []);
   }
 
   function findEntryForAliasName(name) {
@@ -540,7 +787,10 @@ const BindSection = (() => {
     keyFromMouseEvent,
     keyFromWheelEvent,
     entryPreviewLines,
+    resolveBindCommand,
     findEntryForBindCommand,
     findEntryForAliasName,
+    itemsFromBuyCommand,
+    clampItems,
   };
 })();

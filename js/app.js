@@ -750,6 +750,22 @@
       const pickerBtn = row.querySelector('.bind-key-picker-btn');
       if (pickerBtn) pickerBtn.disabled = !enabled;
 
+      row.querySelectorAll('.bind-item-check').forEach((input) => {
+        input.disabled = !enabled;
+        if (entry.kind === 'items') {
+          const selected = new Set(entryState?.items || []);
+          input.checked = selected.has(input.value);
+        }
+      });
+
+      const itemsPanel = row.querySelector('.bind-items');
+      if (itemsPanel) {
+        itemsPanel.hidden = !enabled;
+        const empty = enabled && entry.kind === 'items' && !(entryState?.items || []).length;
+        itemsPanel.classList.toggle('is-empty', empty);
+        row.classList.toggle('bind-row-empty-items', empty);
+      }
+
       const preview = row.querySelector('.bind-preview');
       if (preview) {
         preview.textContent = section.entryPreviewLines(entry, entryState).join('\n');
@@ -780,6 +796,20 @@
     sectionsState.binds[id] = BindSection.clamp(id, {
       ...current,
       key: BindSection.normalizeKey(rawKey),
+    });
+    refresh();
+  }
+
+  function setBindItem(id, itemId, checked) {
+    const entry = BindSection.BY_ID[id];
+    if (!entry || entry.kind !== 'items') return;
+    const current = sectionsState.binds[id] || BindSection.clamp(id, null);
+    const selected = new Set(current.items || []);
+    if (checked) selected.add(itemId);
+    else selected.delete(itemId);
+    sectionsState.binds[id] = BindSection.clamp(id, {
+      ...current,
+      items: [...selected],
     });
     refresh();
   }
@@ -1456,6 +1486,61 @@
     els.settingsContainer.append(mount);
   }
 
+  function createBindItemPicker(entry, entryState) {
+    const panel = document.createElement('div');
+    panel.className = 'bind-items';
+    panel.hidden = !entryState?.enabled;
+
+    const selected = new Set(entryState?.items || []);
+    const groups = entry.itemGroups || [{ id: 'all', label: '', items: entry.items || [] }];
+
+    for (const group of groups) {
+      const section = document.createElement('div');
+      section.className = 'bind-items-group';
+
+      if (group.label) {
+        const label = document.createElement('div');
+        label.className = 'bind-items-group-label';
+        label.textContent = group.label;
+        section.append(label);
+      }
+
+      const grid = document.createElement('div');
+      grid.className = 'bind-items-grid';
+      grid.setAttribute('role', 'group');
+      grid.setAttribute('aria-label', group.label || entry.label);
+
+      for (const item of group.items) {
+        const chip = document.createElement('label');
+        chip.className = 'bind-item-chip';
+        const check = document.createElement('input');
+        check.type = 'checkbox';
+        check.className = 'bind-item-check';
+        check.value = item.id;
+        check.checked = selected.has(item.id);
+        check.disabled = !entryState?.enabled;
+        check.setAttribute('aria-label', item.label);
+        check.addEventListener('change', () => {
+          setBindItem(entry.id, item.id, check.checked);
+        });
+        const text = document.createElement('span');
+        text.textContent = item.label;
+        chip.append(check, text);
+        grid.append(chip);
+      }
+
+      section.append(grid);
+      panel.append(section);
+    }
+
+    const hint = document.createElement('p');
+    hint.className = 'bind-items-hint muted';
+    hint.textContent = 'Select at least one item to export this bind.';
+    panel.append(hint);
+
+    return panel;
+  }
+
   function createBindRow(entry) {
     const state = sectionsState.binds[entry.id];
     const row = document.createElement('div');
@@ -1537,7 +1622,11 @@
     preview.textContent = BindSection.entryPreviewLines(entry, state).join('\n');
     preview.hidden = !state?.enabled;
 
-    row.append(header, preview);
+    row.append(header);
+    if (entry.kind === 'items') {
+      row.append(createBindItemPicker(entry, state));
+    }
+    row.append(preview);
     return row;
   }
 
@@ -1846,6 +1935,21 @@
       if (pickerBtn) pickerBtn.disabled = !entryState?.enabled;
 
       const row = document.querySelector(`[data-bind-id="${entry.id}"]`);
+      if (row && entry.kind === 'items') {
+        const selected = new Set(entryState?.items || []);
+        row.querySelectorAll('.bind-item-check').forEach((input) => {
+          input.disabled = !entryState?.enabled;
+          input.checked = selected.has(input.value);
+        });
+        const itemsPanel = row.querySelector('.bind-items');
+        if (itemsPanel) {
+          itemsPanel.hidden = !entryState?.enabled;
+          const empty = Boolean(entryState?.enabled) && !selected.size;
+          itemsPanel.classList.toggle('is-empty', empty);
+          row.classList.toggle('bind-row-empty-items', empty);
+        }
+      }
+
       const preview = row?.querySelector('.bind-preview');
       if (preview) {
         preview.textContent = BindSection.entryPreviewLines(entry, entryState).join('\n');

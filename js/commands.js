@@ -156,7 +156,13 @@ const ConfigCommands = (() => {
       }
 
       const binds = ensureSection('binds');
-      binds[entry.id] = { enabled: true, key };
+      binds[entry.id] = {
+        enabled: true,
+        key,
+        ...(entry.kind === 'items'
+          ? { items: BindSection.itemsFromBuyCommand(entry, command) }
+          : {}),
+      };
       parsed += 1;
       return true;
     }
