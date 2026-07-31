@@ -65,6 +65,7 @@ Do not rewrite published version sections; put follow-ups under `[Unreleased]` o
 | `js/sections/*.js` | Other sections (`ViewmodelSection`, `HudSection`, …) |
 | `js/sections/index.js` | `ConfigSections` registry — order and lookup |
 | `js/commands.js` | Serialize/import console commands and `.cfg` text |
+| `js/stock-defaults.js` | CS2 engine stock ConVar profile (load / download) |
 | `js/commands-page.js` | Commands reference UI (search/sort/paginate) |
 | `data/cs2-commands.json` | Generated full cvar/command catalog |
 | `data/cvar-overrides.json` | Curated cvars / corrections merged last on refresh |
@@ -76,7 +77,7 @@ Do not rewrite published version sections; put follow-ups under `[Unreleased]` o
 | `js/app.js` | UI, state, persistence (`localStorage`), share URLs |
 | `js/presets.js` / `custom-presets.js` | Pro + user crosshair presets |
 
-**Script load order in `index.html` is load-bearing.** New scripts must be inserted so dependencies exist before consumers (`icons.js` → `settings-module` → section files → `sections/index.js` → helpers/renderers → `commands.js` → `app.js`). `commands.html` loads `js/icons.js` then `js/commands-page.js`.
+**Script load order in `index.html` is load-bearing.** New scripts must be inserted so dependencies exist before consumers (`icons.js` → `settings-module` → section files → `sections/index.js` → helpers/renderers → `commands.js` → `stock-defaults.js` → `app.js`). `commands.html` loads `js/icons.js` then `js/commands-page.js`.
 
 ## Adding or changing settings
 

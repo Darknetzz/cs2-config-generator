@@ -233,6 +233,10 @@
             <button type="button" id="share-btn" class="btn">Share link</button>
             <button type="button" id="reset-btn" class="btn btn-ghost">Reset</button>
           </div>
+          <div class="stock-defaults-actions" role="group" aria-label="CS2 stock defaults">
+            <button type="button" id="load-stock-btn" class="btn">Load CS2 defaults</button>
+            <button type="button" id="download-stock-btn" class="btn">Download CS2 defaults</button>
+          </div>
         </div>
       </div>
       <label class="sr-only" for="command-output">Generated config commands — paste commands here to import</label>
@@ -253,6 +257,7 @@
         Download a <code>.cfg</code> into your CS2 <code>cfg</code> folder, then run
         <code>exec cs2-config</code> (combined) or <code>exec autoexec</code> (modular).
         Or press <kbd>~</kbd> and paste commands directly.
+        <strong>Load / Download CS2 defaults</strong> use stock engine values (fresh install), not the app Reset baseline.
       </p>
     </section>
   </main>
@@ -308,6 +313,7 @@
   <script src="js/viewmodel-renderer.js"></script>
   <script src="js/radar-renderer.js"></script>
   <script src="js/commands.js"></script>
+  <script src="js/stock-defaults.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

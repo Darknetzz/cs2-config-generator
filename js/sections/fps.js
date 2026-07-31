@@ -58,21 +58,36 @@ const FpsSection = createSettingsModule({
     },
     cl_hud_telemetry_frametime_show: {
       label: 'Show frametime',
-      description: 'Show frametime telemetry on the HUD.',
-      type: 'toggle',
+      description: 'Frametime telemetry on the HUD. “When elevated” only shows when frametime is poor.',
+      type: 'select',
       default: 0,
+      options: [
+        { value: 0, label: '0 — Never' },
+        { value: 1, label: '1 — Always' },
+        { value: 2, label: '2 — When elevated' },
+      ],
     },
     cl_hud_telemetry_ping_show: {
       label: 'Show ping',
-      description: 'Show ping telemetry on the HUD.',
-      type: 'toggle',
+      description: 'Ping telemetry on the HUD. “When elevated” only shows when ping is poor.',
+      type: 'select',
       default: 0,
+      options: [
+        { value: 0, label: '0 — Never' },
+        { value: 1, label: '1 — Always' },
+        { value: 2, label: '2 — When elevated' },
+      ],
     },
     cl_hud_telemetry_net_misdelivery_show: {
       label: 'Show packet loss',
-      description: 'Show network misdelivery / packet loss telemetry on the HUD.',
-      type: 'toggle',
+      description: 'Network misdelivery / packet loss telemetry. “When elevated” only shows when loss is high.',
+      type: 'select',
       default: 0,
+      options: [
+        { value: 0, label: '0 — Never' },
+        { value: 1, label: '1 — Always' },
+        { value: 2, label: '2 — When elevated' },
+      ],
     },
     r_show_build_info: {
       label: 'Show build info',

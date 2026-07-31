@@ -21,6 +21,7 @@ A lightweight web app for building Counter-Strike 2 configs. Design your crossha
 - **Custom presets** — save up to 20 of your own crosshairs, export/import as JSON
 - **Console commands** — copy all commands or only changed settings (current section or all)
 - **`.cfg` export** — download the current section, a combined `cs2-config.cfg`, or modular files + `autoexec.cfg`
+- **CS2 stock defaults** — load or download engine ConVar defaults (fresh install) for all generator cvars; separate from the app Reset baseline
 - **Command import** — paste console / cfg text back into the app and apply known cvars
 - **Share links** — delta-encoded settings in the URL (all sections + preview options)
 - **Themes** — auto (system), dark, or light page theme
@@ -43,7 +44,8 @@ Open **Commands** in the header (or `/commands.html` on your host) for the full 
 2. Adjust settings, or click a **Pro preset** on the Crosshair tab
 3. Use **Current section** / **All sections** in the export panel
 4. Click **Copy commands**, **Download .cfg**, or **Download all sections**
-5. To import: paste commands into the textarea and click **Apply pasted**
+5. Optional: **Load CS2 defaults** / **Download CS2 defaults** for stock engine values (not the same as **Reset**)
+6. To import: paste commands into the textarea and click **Apply pasted**
 
 ### Using downloaded configs in CS2
 
@@ -106,6 +108,7 @@ The page defaults to **Auto**, which follows your system light/dark preference. 
 │   │   └── binds.js           # Bind catalog + export helpers
 │   ├── backgrounds.js         # Preview background definitions
 │   ├── commands.js            # Console / .cfg serialization & import
+│   ├── stock-defaults.js      # CS2 engine stock ConVar profile (load / download)
 │   ├── commands-page.js       # Commands reference UI
 │   ├── crosshair-renderer.js  # Crosshair canvas preview
 │   ├── viewmodel-renderer.js  # Viewmodel canvas preview

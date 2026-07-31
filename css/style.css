@@ -1669,6 +1669,15 @@ select {
   gap: 0.45rem;
 }
 
+.stock-defaults-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding-top: 0.35rem;
+  border-top: 1px solid var(--border);
+}
+
+.stock-defaults-actions .btn,
 .action-buttons .btn {
   width: 100%;
   justify-content: center;
@@ -1803,12 +1812,14 @@ select {
     justify-content: space-between;
   }
 
-  .action-buttons {
+  .action-buttons,
+  .stock-defaults-actions {
     flex-direction: row;
     flex-wrap: wrap;
   }
 
-  .action-buttons .btn {
+  .action-buttons .btn,
+  .stock-defaults-actions .btn {
     width: auto;
   }
 }

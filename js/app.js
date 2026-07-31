@@ -71,6 +71,8 @@
     applyImportBtn: document.getElementById('apply-import-btn'),
     downloadCfgBtn: document.getElementById('download-cfg-btn'),
     downloadAllBtn: document.getElementById('download-all-btn'),
+    loadStockBtn: document.getElementById('load-stock-btn'),
+    downloadStockBtn: document.getElementById('download-stock-btn'),
     resetBtn: document.getElementById('reset-btn'),
     shareBtn: document.getElementById('share-btn'),
     toast: document.getElementById('toast'),
@@ -1904,6 +1906,23 @@
     showToast(exportScope === 'current' ? `${getActiveSection().label} reset` : 'Reset to defaults');
   }
 
+  function loadStockDefaults() {
+    if (!window.confirm(
+      'Load CS2 stock defaults into all sections?\n\n'
+      + 'These are engine ConVar defaults (fresh install), not the app Reset baseline.',
+    )) return;
+
+    sectionsState = StockDefaults.createStockSectionsState();
+    syncControlsFromState();
+    refresh();
+    showToast('Loaded CS2 stock defaults');
+  }
+
+  function downloadStockDefaults() {
+    StockDefaults.downloadCfg();
+    showToast(`Downloaded ${StockDefaults.FILE_NAME}`);
+  }
+
   async function copyText(text, button, successLabel = 'Copied!') {
     try {
       await navigator.clipboard.writeText(text);
@@ -2145,6 +2164,8 @@
     els.applyImportBtn?.addEventListener('click', applyImportedCommands);
     els.downloadCfgBtn?.addEventListener('click', downloadCfg);
     els.downloadAllBtn?.addEventListener('click', downloadAllSections);
+    els.loadStockBtn?.addEventListener('click', loadStockDefaults);
+    els.downloadStockBtn?.addEventListener('click', downloadStockDefaults);
     els.resetBtn.addEventListener('click', resetToDefaults);
     els.shareBtn.addEventListener('click', shareLink);
     els.commandOutput.addEventListener('input', updateCommandHighlight);
