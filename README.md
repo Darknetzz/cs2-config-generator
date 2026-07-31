@@ -10,7 +10,7 @@ A lightweight web app for building Counter-Strike 2 configs. Design your crossha
 
 - **Multi-section config** — Crosshair, Viewmodel, HUD, Radar, FPS, and Binds panels from one UI
 - **Commands reference** — searchable/sortable list of all CS2 console commands and cvars, with prefix-based category filters ([commands.html](commands.html))
-- **Useful binds** — buy default / weapons / grenades, grenade quick-switch, drop bomb, spinbot, mute team, scroll jump, practice helpers, and more — opt-in with editable keys (picker for mouse buttons and other CS2 keys); export labels each bind with a `//` comment
+- **Useful binds** — buy default / rebuy / weapons / grenades, grenade quick-switch, drop bomb, spinbot, mute team, scroll jump, practice helpers, and more — opt-in with editable keys (picker for mouse buttons and other CS2 keys); export labels each bind with a `//` comment
 - **Live crosshair preview** — true 1:1 size (64×64 px at 1080p) with dynamic style animation
 - **Live viewmodel & radar previews** — canvas previews for weapon position and in-game radar (Ancient minimap plate)
 - **Expand preview** — click a preview to open a live full-size modal (crosshair, viewmodel, or radar)

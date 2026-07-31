@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Load / download CS2 stock defaults (engine ConVar values for a fresh install) from the export panel
-- Buy binds: autobuy (F3), configurable weapon/gear buys, grenade buys, and quick-switch to flash / smoke / HE / molotov / decoy
+- Buy binds: autobuy (F3), rebuy (F2), configurable weapon/gear buys, grenade buys, and quick-switch to flash / smoke / HE / molotov / decoy
 - `mp_shoot_dropped_grenades` in the Commands catalog (curated override; shoot dropped grenades to activate them, needs `sv_cheats 1`)
 - Icons on site nav links and config section tabs
 - Larger preview column and click-to-expand live preview modal (crosshair, viewmodel, radar)

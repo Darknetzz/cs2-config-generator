@@ -150,6 +150,14 @@ const BindSection = (() => {
       bindCommand: 'autobuy',
     },
     {
+      id: 'rebuy',
+      group: 'buy',
+      label: 'Rebuy',
+      description: 'Repurchase last round’s items (cl_rebuy order). Default key is F2 in stock CS2.',
+      defaultKey: 'f2',
+      bindCommand: 'rebuy',
+    },
+    {
       id: 'buyWeapons',
       group: 'buy',
       label: 'Buy weapons / gear',
