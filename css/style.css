@@ -1744,7 +1744,7 @@ select {
   border-radius: 8px;
 }
 
-.export-scope-btn {
+.export-toggle-btn {
   flex: 1;
   padding: 0.4rem 0.5rem;
   font-size: 0.78rem;
@@ -1757,11 +1757,11 @@ select {
   transition: background 0.15s, color 0.15s;
 }
 
-.export-scope-btn:hover {
+.export-toggle-btn:hover {
   color: var(--accent);
 }
 
-.export-scope-btn.active {
+.export-toggle-btn.active {
   background: var(--accent);
   color: var(--accent-text);
   font-weight: 600;

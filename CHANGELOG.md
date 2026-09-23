@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Changed only** export mode (on by default): preview, copy, and `.cfg` download omit settings that still match the Reset baseline; preference is saved in `localStorage`
 - Rush Hour crosshair styles: Dynamic Cross, Dynamic Circle, Dynamic Cross Classic, Static Circle, Static Cross, Legacy/Shot Feedback, Dot Only, and Dynamic Quad (new default)
 - `cl_crosshair_dynamic_spread_limit` for dynamic style expansion
 - Sniper options: delay unscope and auto-rezoom
@@ -31,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Export panel: **Changed only** / **All settings** toggle replaces the separate **Copy changed only** button; preview and downloads follow the same mode
 - Crosshair cvars updated for Rush Hour: `cl_crosshair_length` / `_gap` / `_thickness`, `cl_crosshaircolor_a`, styles 0–7, resolution-independent preview
 - Import / localStorage / custom presets migrate legacy crosshair names (`cl_crosshairsize`, `cl_crosshairalpha`, color presets, etc.)
 - Stock crosshair defaults match Dynamic Quad (style 7)

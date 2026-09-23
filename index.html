@@ -245,13 +245,16 @@
       <div class="commands-header">
         <h2>Config export</h2>
         <div class="export-controls">
-          <div class="export-toggle" role="group" aria-label="Export scope">
-            <button type="button" class="export-scope-btn active" data-export-scope="current" aria-pressed="true">Current section</button>
-            <button type="button" class="export-scope-btn" data-export-scope="all" aria-pressed="false">All sections</button>
+          <div id="export-scope-toggle" class="export-toggle" role="group" aria-label="Export scope">
+            <button type="button" class="export-toggle-btn active" data-export-scope="current" aria-pressed="true">Current section</button>
+            <button type="button" class="export-toggle-btn" data-export-scope="all" aria-pressed="false">All sections</button>
+          </div>
+          <div id="export-mode-toggle" class="export-toggle" role="group" aria-label="Export contents">
+            <button type="button" class="export-toggle-btn active" data-export-minimal="true" aria-pressed="true">Changed only</button>
+            <button type="button" class="export-toggle-btn" data-export-minimal="false" aria-pressed="false">All settings</button>
           </div>
           <div class="action-buttons">
             <button type="button" id="copy-btn" class="btn btn-primary">Copy commands</button>
-            <button type="button" id="copy-minimal-btn" class="btn">Copy changed only</button>
             <button type="button" id="apply-import-btn" class="btn">Apply pasted</button>
             <button type="button" id="download-cfg-btn" class="btn">Download .cfg</button>
             <button type="button" id="download-all-btn" class="btn">Download all sections</button>
@@ -278,6 +281,7 @@
         <pre id="command-output-highlight" class="command-output-highlight" aria-hidden="true"></pre>
       </div>
       <p class="commands-hint">
+        <strong>Changed only</strong> (default) omits settings that still match the Reset baseline so your other in-game customs are not overwritten.
         Edit or paste commands above, then click <strong>Apply pasted</strong>.
         Download a <code>.cfg</code> into your CS2 <code>cfg</code> folder, then run
         <code>exec cs2-config</code> (combined) or <code>exec autoexec</code> (modular).

@@ -19,8 +19,8 @@ A lightweight web app for building Counter-Strike 2 configs. Design your crossha
 - **Zoom** — scale the crosshair preview from 50% to 300%
 - **Pro presets** — one-click crosshairs from donk, ZywOo, s1mple, NiKo, m0NESY, ropz, dev1ce, EliGE, XANTARES, and kyousuke
 - **Custom presets** — save up to 20 of your own crosshairs, export/import as JSON
-- **Console commands** — copy all commands or only changed settings (current section or all)
-- **`.cfg` export** — download the current section, a combined `cs2-config.cfg`, or modular files + `autoexec.cfg`
+- **Console commands** — copy / preview export with **Changed only** (default) or **All settings**, scoped to the current section or everything
+- **`.cfg` export** — download the current section, a combined `cs2-config.cfg`, or modular files + `autoexec.cfg` (respects Changed only)
 - **CS2 stock defaults** — load or download engine ConVar defaults (fresh install) for all generator cvars; separate from the app Reset baseline
 - **Command import** — paste console / cfg text back into the app and apply known cvars
 - **Share links** — delta-encoded settings in the URL (all sections + preview options)
@@ -42,7 +42,7 @@ Open **Commands** in the header (or `/commands.html` on your host) for the full 
 
 1. Pick a section tab (Crosshair, Viewmodel, HUD, Radar, FPS, Binds)
 2. Adjust settings, or click a **Pro preset** on the Crosshair tab
-3. Use **Current section** / **All sections** in the export panel
+3. Use **Current section** / **All sections** and **Changed only** / **All settings** in the export panel
 4. Click **Copy commands**, **Download .cfg**, or **Download all sections**
 5. Optional: **Load CS2 defaults** / **Download CS2 defaults** for stock engine values (not the same as **Reset**)
 6. To import: paste commands into the textarea and click **Apply pasted**

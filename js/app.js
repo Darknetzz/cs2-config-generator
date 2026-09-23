@@ -10,6 +10,8 @@
   let sectionsState = ConfigSections.createDefaultSectionsState();
   let activeSectionId = ConfigSections.DEFAULT_ID;
   let exportScope = 'current';
+  /** When true, export omits settings that still match the app Reset baseline. */
+  let exportMinimal = true;
   let previewBackground = 'dark';
   let previewZoom = PreviewZoom.DEFAULT;
   let previewMode = PreviewMode.DEFAULT_MODE;
@@ -71,7 +73,8 @@
     commandOutput: document.getElementById('command-output'),
     commandOutputHighlight: document.getElementById('command-output-highlight'),
     copyBtn: document.getElementById('copy-btn'),
-    copyMinimalBtn: document.getElementById('copy-minimal-btn'),
+    exportScopeToggle: document.getElementById('export-scope-toggle'),
+    exportModeToggle: document.getElementById('export-mode-toggle'),
     applyImportBtn: document.getElementById('apply-import-btn'),
     downloadCfgBtn: document.getElementById('download-cfg-btn'),
     downloadAllBtn: document.getElementById('download-all-btn'),
@@ -130,6 +133,14 @@
 
   function exportSectionId() {
     return exportScope === 'current' ? activeSectionId : null;
+  }
+
+  function exportOptions(extra = {}) {
+    return {
+      minimal: exportMinimal,
+      sectionId: exportSectionId(),
+      ...extra,
+    };
   }
 
   function showToast(message, duration = 2000) {
@@ -607,10 +618,9 @@
 
   function updateCommands() {
     if (document.activeElement === els.commandOutput) return;
-    setCommandOutput(ConfigCommands.toMultilineString(sectionsState, {
-      sectionId: exportSectionId(),
+    setCommandOutput(ConfigCommands.toMultilineString(sectionsState, exportOptions({
       comments: exportScope === 'all',
-    }));
+    })));
   }
 
   function isSectionAtDefault(sectionId) {
@@ -1820,15 +1830,26 @@
   function setExportScope(scope) {
     if (scope !== 'current' && scope !== 'all') return;
     exportScope = scope;
-    setTogglePressed(document.querySelector('.export-toggle'), '.export-scope-btn', scope, 'data-export-scope');
+    setTogglePressed(els.exportScopeToggle, '.export-toggle-btn', scope, 'data-export-scope');
     updateCommands();
   }
 
-  function initExportScope() {
-    document.querySelectorAll('[data-export-scope]').forEach((btn) => {
+  function setExportMinimal(minimal) {
+    exportMinimal = Boolean(minimal);
+    setTogglePressed(els.exportModeToggle, '.export-toggle-btn', String(exportMinimal), 'data-export-minimal');
+    schedulePersist();
+    updateCommands();
+  }
+
+  function initExportControls() {
+    els.exportScopeToggle?.querySelectorAll('[data-export-scope]').forEach((btn) => {
       btn.addEventListener('click', () => setExportScope(btn.dataset.exportScope));
     });
-    setTogglePressed(document.querySelector('.export-toggle'), '.export-scope-btn', exportScope, 'data-export-scope');
+    els.exportModeToggle?.querySelectorAll('[data-export-minimal]').forEach((btn) => {
+      btn.addEventListener('click', () => setExportMinimal(btn.dataset.exportMinimal === 'true'));
+    });
+    setTogglePressed(els.exportScopeToggle, '.export-toggle-btn', exportScope, 'data-export-scope');
+    setTogglePressed(els.exportModeToggle, '.export-toggle-btn', String(exportMinimal), 'data-export-minimal');
   }
 
   function applySectionsState(incoming) {
@@ -1869,6 +1890,7 @@
       previewMode: PreviewMode.DEFAULT_MODE,
       customPresets: [],
       theme: 'system',
+      exportMinimal: true,
       activeSection: ConfigSections.DEFAULT_ID,
     };
 
@@ -1894,6 +1916,9 @@
     }
     if (parsed?.theme === 'system' || parsed?.theme === 'light' || parsed?.theme === 'dark') {
       migrated.theme = parsed.theme;
+    }
+    if (typeof parsed?.exportMinimal === 'boolean') {
+      migrated.exportMinimal = parsed.exportMinimal;
     }
     if (ConfigSections.isValidId(parsed?.activeSection)) {
       migrated.activeSection = parsed.activeSection;
@@ -1929,6 +1954,7 @@
       previewMode = migrated.previewMode;
       customPresets = migrated.customPresets;
       colorTheme = migrated.theme;
+      exportMinimal = migrated.exportMinimal;
       activeSectionId = migrated.activeSection;
 
       if (fromLegacy) {
@@ -1951,6 +1977,7 @@
         previewMode,
         customPresets,
         theme: colorTheme,
+        exportMinimal,
       }));
       const url = new URL(window.location.href);
       url.searchParams.set(URL_PARAM, ConfigCommands.toUrlParam(sectionsState, {
@@ -2131,12 +2158,13 @@
     showToast(successLabel);
   }
 
-  async function copyCommands(minimal = false) {
-    const text = ConfigCommands.toCommandString(sectionsState, {
-      minimal,
-      sectionId: exportSectionId(),
-    });
-    await copyText(text, minimal ? els.copyMinimalBtn : els.copyBtn);
+  async function copyCommands() {
+    const text = ConfigCommands.toCommandString(sectionsState, exportOptions());
+    if (!text.trim()) {
+      showToast('Nothing to copy — all settings match defaults');
+      return;
+    }
+    await copyText(text, els.copyBtn);
   }
 
   function applyImportedCommands() {
@@ -2157,17 +2185,17 @@
   function downloadCfg() {
     if (exportScope === 'current') {
       const section = getActiveSection();
-      ConfigCommands.downloadSectionCfg(section, sectionsState[section.id]);
+      ConfigCommands.downloadSectionCfg(section, sectionsState[section.id], { minimal: exportMinimal });
       showToast(`Downloaded ${section.fileName}.cfg`);
       return;
     }
 
-    ConfigCommands.downloadCombinedCfg(sectionsState, { mode: 'inline' });
+    ConfigCommands.downloadCombinedCfg(sectionsState, { mode: 'inline', minimal: exportMinimal });
     showToast('Downloaded cs2-config.cfg');
   }
 
   function downloadAllSections() {
-    ConfigCommands.downloadAllModular(sectionsState);
+    ConfigCommands.downloadAllModular(sectionsState, { minimal: exportMinimal });
     showToast('Downloading section .cfg files + autoexec.cfg');
   }
 
@@ -2343,14 +2371,13 @@
     initHudPreviewToggles();
     initCustomPresets();
     initKeyboardShortcuts();
-    initExportScope();
+    initExportControls();
     buildSectionTabs();
     buildPresetsUI();
     buildSettingsUI();
     buildBackgroundToggles();
 
-    els.copyBtn.addEventListener('click', () => copyCommands(false));
-    els.copyMinimalBtn?.addEventListener('click', () => copyCommands(true));
+    els.copyBtn.addEventListener('click', () => copyCommands());
     els.applyImportBtn?.addEventListener('click', applyImportedCommands);
     els.downloadCfgBtn?.addEventListener('click', downloadCfg);
     els.downloadAllBtn?.addEventListener('click', downloadAllSections);
