@@ -27,11 +27,7 @@ const CustomPresets = (() => {
     if (!raw || typeof raw !== 'object' || !raw.id || !raw.label || !raw.state) return null;
 
     const state = createDefaultCrosshairState();
-    for (const key of CROSSHAIR_CVAR_ORDER) {
-      if (key in raw.state) {
-        state[key] = clampSettingValue(key, raw.state[key]);
-      }
-    }
+    CrosshairSection.mergeState(state, raw.state);
 
     return {
       id: String(raw.id),

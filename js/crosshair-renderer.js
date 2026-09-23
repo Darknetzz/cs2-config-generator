@@ -1,12 +1,14 @@
 /**
- * Canvas renderer for CS2 crosshair preview.
- * Based on the rectangle-based algorithm used by community crosshair tools.
+ * Canvas renderer for CS2 crosshair preview (Rush Hour styles 0–7).
+ * Resolution-independent length / gap / thickness units, scaled to the preview.
  */
 const CrosshairRenderer = (() => {
-  const INTERNAL_SIZE = 64;
+  const INTERNAL_SIZE = 128;
   const PREVIEW_SIZE = 640;
   const ANIMATION_CYCLE_MS = 1800;
   const CHECKER_TILE = 16;
+  const OUTLINE_PAD = 1;
+  const MAX_DYNAMIC_SPREAD = 40;
 
   let animFrameId = null;
   let animCanvas = null;
@@ -50,7 +52,11 @@ const CrosshairRenderer = (() => {
   }
 
   function isDynamicStyle(style) {
-    return style === 0 || style === 2 || style === 3;
+    return CrosshairSection.DYNAMIC_STYLES.includes(Number(style));
+  }
+
+  function isCircleStyle(style) {
+    return CrosshairSection.CIRCLE_STYLES.includes(Number(style));
   }
 
   function isAnimating() {
@@ -63,11 +69,13 @@ const CrosshairRenderer = (() => {
     const phase = (timestamp % ANIMATION_CYCLE_MS) / ANIMATION_CYCLE_MS;
     const wave = (1 - Math.cos(phase * Math.PI * 2)) / 2;
 
-    if (style === 3) {
+    // Style 5 — shot-feedback pulse (sharper attack).
+    if (style === 5) {
       return Math.pow(wave, 0.45);
     }
 
-    if (style === 0) {
+    // Styles 0 / 1 / 7 — inaccuracy tracking (slightly softer).
+    if (style === 0 || style === 1 || style === 7) {
       return wave * 0.85;
     }
 
@@ -75,21 +83,17 @@ const CrosshairRenderer = (() => {
   }
 
   function resolveColor(state) {
-    const useAlpha = state.cl_crosshairusealpha === 1;
-    const alpha = useAlpha ? state.cl_crosshairalpha / 255 : 1;
-    let rgb;
+    return {
+      r: state.cl_crosshaircolor_r,
+      g: state.cl_crosshaircolor_g,
+      b: state.cl_crosshaircolor_b,
+      a: (state.cl_crosshaircolor_a ?? 255) / 255,
+    };
+  }
 
-    if (state.cl_crosshaircolor === 5) {
-      rgb = [
-        state.cl_crosshaircolor_r,
-        state.cl_crosshaircolor_g,
-        state.cl_crosshaircolor_b,
-      ];
-    } else {
-      rgb = CROSSHAIR_PRESET_COLORS[state.cl_crosshaircolor] || CROSSHAIR_PRESET_COLORS[1];
-    }
-
-    return { r: rgb[0], g: rgb[1], b: rgb[2], a: alpha };
+  function getSpreadExtra(state, dynamicFactor) {
+    const limit = Number(state.cl_crosshair_dynamic_spread_limit ?? 255);
+    return dynamicFactor * (limit / 255) * MAX_DYNAMIC_SPREAD;
   }
 
   function withAlpha(color, mod) {
@@ -97,7 +101,7 @@ const CrosshairRenderer = (() => {
   }
 
   function computeDotBounds(thickness, centerX, centerY) {
-    const t = Math.max(0.5, thickness * 2);
+    const t = Math.max(1, thickness);
     const rb = Math.floor(t / 2);
     const lt = t - rb;
     return {
@@ -108,12 +112,12 @@ const CrosshairRenderer = (() => {
     };
   }
 
-  function computeArms(dot, gap, size) {
-    const topBase = dot.y0 - 4 - gap;
-    const bottomBase = dot.y1 + 4 + gap;
-    const leftBase = dot.x0 - 4 - gap;
-    const rightBase = dot.x1 + 4 + gap;
-    const armLen = size * 2;
+  function computeArms(dot, gap, length) {
+    const topBase = dot.y0 - gap;
+    const bottomBase = dot.y1 + gap;
+    const leftBase = dot.x0 - gap;
+    const rightBase = dot.x1 + gap;
+    const armLen = Math.max(0, length);
 
     return [
       { x0: dot.x0, y0: topBase - armLen, x1: dot.x1, y1: topBase, side: 'top' },
@@ -207,16 +211,15 @@ const CrosshairRenderer = (() => {
       splitRatio,
       innerAlphaMod,
       outerAlphaMod,
-      useWeaponGap,
     } = dynamic;
 
-    if (style !== 2 || factor <= 0 || !useWeaponGap) {
+    if (style !== 2 || factor <= 0) {
       drawPart(ctx, arm, color, drawOutlineEnabled, outlinePad, scale);
       return;
     }
 
     const splitOffset = splitDist * factor;
-    const { inner, outer } = splitArm(arm, splitRatio, splitOffset);
+    const { inner, outer } = splitArm(arm, 1 - splitRatio, splitOffset);
 
     drawPart(
       ctx,
@@ -227,7 +230,7 @@ const CrosshairRenderer = (() => {
       scale,
     );
 
-    if (outer && splitRatio < 1) {
+    if (outer && splitRatio > 0) {
       drawPart(
         ctx,
         outer,
@@ -236,6 +239,57 @@ const CrosshairRenderer = (() => {
         outlinePad,
         scale,
       );
+    }
+  }
+
+  function strokeCircle(ctx, cx, cy, radius, lineWidth, color, drawOutlineEnabled, scale) {
+    if (radius <= 0 || lineWidth <= 0) return;
+
+    const x = cx * scale;
+    const y = cy * scale;
+    const r = radius * scale;
+    const lw = Math.max(1, lineWidth * scale);
+
+    if (drawOutlineEnabled) {
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(0, 0, 0, 1)';
+      ctx.lineWidth = lw + OUTLINE_PAD * 2 * scale;
+      ctx.stroke();
+    }
+
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(${color.r}, ${color.g}, ${color.b}, ${color.a})`;
+    ctx.lineWidth = lw;
+    ctx.stroke();
+  }
+
+  function drawQuadCorners(ctx, cx, cy, distance, arm, thickness, color, drawOutlineEnabled, scale) {
+    const t = Math.max(1, thickness);
+    const len = Math.max(1, arm);
+    const corners = [
+      { x: cx - distance, y: cy - distance, dx: 1, dy: 1 },
+      { x: cx + distance, y: cy - distance, dx: -1, dy: 1 },
+      { x: cx - distance, y: cy + distance, dx: 1, dy: -1 },
+      { x: cx + distance, y: cy + distance, dx: -1, dy: -1 },
+    ];
+
+    for (const corner of corners) {
+      const h = {
+        x0: corner.dx > 0 ? corner.x : corner.x - len,
+        y0: corner.y - t / 2,
+        x1: corner.dx > 0 ? corner.x + len : corner.x,
+        y1: corner.y + t / 2,
+      };
+      const v = {
+        x0: corner.x - t / 2,
+        y0: corner.dy > 0 ? corner.y : corner.y - len,
+        x1: corner.x + t / 2,
+        y1: corner.dy > 0 ? corner.y + len : corner.y,
+      };
+      drawPart(ctx, h, color, drawOutlineEnabled, OUTLINE_PAD, scale);
+      drawPart(ctx, v, color, drawOutlineEnabled, OUTLINE_PAD, scale);
     }
   }
 
@@ -392,28 +446,19 @@ const CrosshairRenderer = (() => {
   }
 
   function getBaseGap(state) {
-    const style = state.cl_crosshairstyle;
-    const useWeapon = state.cl_crosshairgap_useweaponvalue === 1;
-
-    // Valve: cl_fixedcrosshairgap applies to style 1 (static default).
-    // Styles 0 and 2–5 use cl_crosshairgap (including classic static style 4).
-    if (!useWeapon && style === 1) {
-      return state.cl_fixedcrosshairgap;
-    }
-
-    return state.cl_crosshairgap;
+    return state.cl_crosshair_gap;
   }
 
   function getEffectiveGap(state, dynamicFactor) {
     const style = state.cl_crosshairstyle;
     const baseGap = getBaseGap(state);
-    const useWeapon = state.cl_crosshairgap_useweaponvalue === 1;
 
-    if (!isDynamicStyle(style) || style === 2 || !useWeapon) {
+    // Style 2 uses split offset on arms instead of expanding the base gap.
+    if (!isDynamicStyle(style) || style === 2 || style === 7) {
       return baseGap;
     }
 
-    return baseGap + state.cl_crosshair_dynamic_splitdist * dynamicFactor;
+    return baseGap + getSpreadExtra(state, dynamicFactor);
   }
 
   function getCrosshairScale(height) {
@@ -444,15 +489,13 @@ const CrosshairRenderer = (() => {
     ctx.translate(offsetX, offsetY);
 
     const color = resolveColor(state);
-    const thickness = state.cl_crosshairthickness;
+    const thickness = Math.max(1, state.cl_crosshair_thickness);
     const gap = getEffectiveGap(state, dynamicFactor);
-    const size = state.cl_crosshairsize;
-    const showDot = state.cl_crosshairdot === 1;
+    const length = state.cl_crosshair_length;
+    const showDot = state.cl_crosshairdot === 1 || state.cl_crosshairstyle === 6;
     const tShape = state.cl_crosshair_t === 1;
     const drawOutlineEnabled = state.cl_crosshair_drawoutline === 1;
-    const outlinePad = state.cl_crosshair_outlinethickness;
     const style = state.cl_crosshairstyle;
-    const useWeaponGap = state.cl_crosshairgap_useweaponvalue === 1;
 
     const dynamic = {
       style,
@@ -461,21 +504,65 @@ const CrosshairRenderer = (() => {
       splitRatio: state.cl_crosshair_dynamic_maxdist_splitratio,
       innerAlphaMod: state.cl_crosshair_dynamic_splitalpha_innermod,
       outerAlphaMod: state.cl_crosshair_dynamic_splitalpha_outermod,
-      useWeaponGap,
     };
 
     const dot = computeDotBounds(thickness, centerX, centerY);
-    const arms = computeArms(dot, gap, size);
 
-    if (showDot) {
-      drawPart(ctx, dot, color, drawOutlineEnabled, outlinePad, scale);
+    // Style 6 — Dot Only.
+    if (style === 6) {
+      drawPart(ctx, dot, color, drawOutlineEnabled, OUTLINE_PAD, scale);
+      ctx.restore();
+      return;
     }
 
-    if (size !== 0) {
+    // Styles 1 / 3 — Circle (1 dynamic, 3 static).
+    if (isCircleStyle(style)) {
+      const radius = Math.max(thickness, Math.abs(gap) + length);
+      strokeCircle(
+        ctx,
+        centerX,
+        centerY,
+        radius,
+        thickness,
+        color,
+        drawOutlineEnabled,
+        scale,
+      );
+      if (showDot) {
+        drawPart(ctx, dot, color, drawOutlineEnabled, OUTLINE_PAD, scale);
+      }
+      ctx.restore();
+      return;
+    }
+
+    const arms = computeArms(dot, gap, length);
+
+    if (showDot) {
+      drawPart(ctx, dot, color, drawOutlineEnabled, OUTLINE_PAD, scale);
+    }
+
+    if (length !== 0) {
       for (const arm of arms) {
         if (tShape && arm.side === 'top') continue;
-        drawArm(ctx, arm, color, drawOutlineEnabled, outlinePad, scale, dynamic);
+        drawArm(ctx, arm, color, drawOutlineEnabled, OUTLINE_PAD, scale, dynamic);
       }
+    }
+
+    // Style 7 — Dynamic Quad: static cross + expanding corner brackets.
+    if (style === 7) {
+      const quadDist = Math.max(gap + length + 2, 6) + getSpreadExtra(state, dynamicFactor);
+      const quadArm = Math.max(2, Math.round(thickness + 1));
+      drawQuadCorners(
+        ctx,
+        centerX,
+        centerY,
+        quadDist,
+        quadArm,
+        thickness,
+        withAlpha(color, 0.85),
+        drawOutlineEnabled,
+        scale,
+      );
     }
 
     ctx.restore();

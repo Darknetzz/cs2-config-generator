@@ -217,7 +217,19 @@ const ConfigCommands = (() => {
         continue;
       }
 
-      ensureSection(section.id)[key] = parseCommandValue(section, key, match[2]);
+      const target = ensureSection(section.id);
+      if (typeof section.consumeImportCvar === 'function' && section.consumeImportCvar(target, key, match[2])) {
+        parsed += 1;
+        continue;
+      }
+
+      const resolvedKey = section.LEGACY_KEY_MAP?.[key] || key;
+      if (!(resolvedKey in section.SETTINGS)) {
+        skipped += 1;
+        continue;
+      }
+
+      target[resolvedKey] = parseCommandValue(section, resolvedKey, match[2]);
       parsed += 1;
     }
 

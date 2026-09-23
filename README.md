@@ -11,7 +11,7 @@ A lightweight web app for building Counter-Strike 2 configs. Design your crossha
 - **Multi-section config** — Crosshair, Viewmodel, HUD, Radar, FPS, and Binds panels from one UI
 - **Commands reference** — searchable/sortable list of all CS2 console commands and cvars, with prefix-based category filters ([commands.html](commands.html))
 - **Useful binds** — buy default / rebuy / weapons / grenades, grenade quick-switch, drop bomb, spinbot, mute team, scroll jump, practice helpers, and more — opt-in with editable keys (picker for mouse buttons and other CS2 keys); export labels each bind with a `//` comment
-- **Live crosshair preview** — true 1:1 size (64×64 px at 1080p) with dynamic style animation
+- **Live crosshair preview** — resolution-independent Rush Hour styles (cross, circle, dot, Dynamic Quad) with dynamic spread animation
 - **Live viewmodel, HUD & radar previews** — canvas previews for weapon position, stylized competitive HUD chrome, and in-game radar (Ancient minimap plate)
 - **Expand preview** — click a preview to open a live full-size modal (crosshair, viewmodel, HUD, or radar)
 - **Preview modes** — normal, grenade lineup reticle, and sniper scope overlay (crosshair)
@@ -142,17 +142,17 @@ Fetches and **merges** two public dumps by default:
 1. [ArminC-CS2-Cvars](https://github.com/ArmynC/ArminC-CS2-Cvars) — broader list (includes many hidden/dev cvars)
 2. [Nihilnia/CounterStrike](https://github.com/Nihilnia/CounterStrike) — fresher in-game-style dump (~1.41.x)
 
-Shared names keep the richer/newer fields; ArminC-only names are kept. Curated entries in [`data/cvar-overrides.json`](data/cvar-overrides.json) are applied last. Then accepted-value ranges from this app’s settings and prefix **categories** are applied.
+Shared names keep the richer/newer fields; ArminC-only names are kept. Local `--input` dumps overlay next, then curated entries in [`data/cvar-overrides.json`](data/cvar-overrides.json). Accepted-value ranges from this app’s settings and prefix **categories** are applied last.
 
 ```bash
-# Single source only
+# Single public source only (replaces the default URL list)
 python3 scripts/refresh-cs2-commands.py --url 'https://raw.githubusercontent.com/Nihilnia/CounterStrike/main/Counter%20Strike%202/List%20of%20console%20commands%20and%20variables.md'
 
-# Local file(s), merged in order (later overlays earlier)
-python3 scripts/refresh-cs2-commands.py --input dump-a.md --input dump-b.txt
+# Local file(s) on top of the default public dumps (later overlays earlier)
+python3 scripts/refresh-cs2-commands.py --input cfg/202609_cvarlist_native.txt
 ```
 
-Note: CS2 no longer supports `con_logfile`, and `condump` often creates no files. Prefer pasting a console `cvarlist` capture or using the maintained public dumps.
+Note: CS2 no longer supports `con_logfile`, and `condump` often creates no files. Prefer pasting a console `cvarlist` capture (use `cvarlist cl_crosshair` — prefix match) or using the maintained public dumps.
 
 ## Map backgrounds
 

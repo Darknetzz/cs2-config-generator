@@ -1,0 +1,8 @@
+Static Cross            = 4
+Static Circle           = 3
+Dot Only                = 6
+Dymamic Cross           = 0
+Dynamic Circle          = 1
+Dynamic Cross (Classic) = 2
+Dynamic Cross (Legacy/Shot Feedback) = 5
+Dynamic Quad            = 7

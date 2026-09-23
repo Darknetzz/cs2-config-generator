@@ -54,6 +54,9 @@ CATEGORY_RULES: list[tuple[str, str]] = [
     ("cl_fixedcrosshair*", "Crosshair"),
     ("cl_sniper_delay_unscope", "Crosshair"),
     ("cl_sniper_show_inaccuracy", "Crosshair"),
+    ("cl_sniper_auto_rezoom", "Crosshair"),
+    ("cl_sniper*", "Crosshair"),
+    ("cl_ironsight*", "Crosshair"),
     # Viewmodel
     ("viewmodel_*", "Viewmodel"),
     ("cl_righthand", "Viewmodel"),
@@ -638,27 +641,29 @@ def main() -> int:
     sources: list[str] = []
     command_lists: list[list[dict]] = []
 
-    if args.inputs:
-        for path in args.inputs:
-            print(f"Reading {path} …", file=sys.stderr)
-            text = path.read_text(encoding="utf-8")
-            sources.append(str(path))
-            command_lists.append(parse_cvarlist(text))
-    else:
-        urls = args.urls if args.urls else list(DEFAULT_URLS)
+    # --url replaces the default URL list; omit it to keep Nihilnia + ArminC.
+    # --input overlays are always applied after URL dumps (local wins on overlap).
+    urls = list(DEFAULT_URLS) if args.urls is None else args.urls
+    if urls == list(DEFAULT_URLS):
+        urls = [ARMINC_URL, NIHILNIA_URL]
+
+    if urls:
         for url in urls:
             print(f"Fetching {url} …", file=sys.stderr)
             text = fetch_text(url)
             sources.append(url)
             command_lists.append(parse_cvarlist(text))
 
-    # Overlay order: first list is base, later lists win on non-empty fields.
-    # Put ArminC first (broader), Nihilnia second (fresher public values) when using defaults.
-    if not args.inputs and not args.urls:
-        # DEFAULT_URLS is (Nihilnia, ArminC) — reorder to ArminC base + Nihilnia overlay
-        if len(command_lists) == 2 and sources[0] == NIHILNIA_URL and sources[1] == ARMINC_URL:
-            command_lists = [command_lists[1], command_lists[0]]
-            sources = [sources[1], sources[0]]
+    if args.inputs:
+        for path in args.inputs:
+            print(f"Reading {path} …", file=sys.stderr)
+            text = path.read_text(encoding="utf-8")
+            sources.append(str(path))
+            command_lists.append(parse_cvarlist(text))
+
+    if not command_lists:
+        print("No dump sources provided.", file=sys.stderr)
+        return 1
 
     enrichments = extract_section_enrichments(SECTION_GLOBS)
     overrides = load_overrides(OVERRIDES_PATH)

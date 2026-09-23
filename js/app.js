@@ -1127,51 +1127,80 @@
   }
 
   function updateColorPresetButtons() {
-    const wrap = document.getElementById('input-cl_crosshaircolor');
+    const wrap = document.getElementById('input-crosshair-quick-colors');
     if (!wrap) return;
 
-    const selected = getCrosshairState().cl_crosshaircolor;
-    wrap.querySelectorAll('[data-color-value]').forEach((btn) => {
-      const value = Number(btn.dataset.colorValue);
-      const isActive = value === selected;
+    const state = getCrosshairState();
+    wrap.querySelectorAll('[data-quick-color]').forEach((btn) => {
+      const [r, g, b] = btn.dataset.quickColor.split(',').map(Number);
+      const isActive = state.cl_crosshaircolor_r === r
+        && state.cl_crosshaircolor_g === g
+        && state.cl_crosshaircolor_b === b;
       btn.classList.toggle('active', isActive);
       btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-
-      if (value === 5) {
-        btn.querySelector('.color-swatch-dot')?.style.setProperty(
-          'background',
-          getCrosshairSwatchColor(getCrosshairState()),
-        );
-      }
     });
   }
 
-  function createColorPresetControl(section, key, meta) {
+  function createQuickColorControl(section) {
     const state = sectionsState[section.id];
     const wrap = document.createElement('div');
     wrap.className = 'color-preset-toggle';
-    wrap.id = `input-${key}`;
+    wrap.id = 'input-crosshair-quick-colors';
     wrap.setAttribute('role', 'group');
-    wrap.setAttribute('aria-label', meta.label);
+    wrap.setAttribute('aria-label', 'Quick colors');
 
-    for (const opt of meta.options) {
+    for (const opt of section.QUICK_COLORS || []) {
+      const [r, g, b] = opt.rgb;
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'color-preset-btn';
-      btn.dataset.colorValue = opt.value;
-      const isActive = opt.value === state[key];
+      btn.dataset.quickColor = opt.rgb.join(',');
+      const isActive = state.cl_crosshaircolor_r === r
+        && state.cl_crosshaircolor_g === g
+        && state.cl_crosshaircolor_b === b;
       btn.classList.toggle('active', isActive);
       btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-
-      const swatchColor = opt.value === 5
-        ? getCrosshairSwatchColor(state)
-        : presetColorToCss(opt.value);
-      btn.append(createColorSwatchDot(swatchColor), document.createTextNode(opt.label));
-      btn.addEventListener('click', () => setState(section, key, opt.value));
+      btn.append(
+        createColorSwatchDot(`rgb(${r}, ${g}, ${b})`),
+        document.createTextNode(opt.label),
+      );
+      btn.addEventListener('click', () => {
+        sectionsState[section.id].cl_crosshaircolor_r = section.clamp('cl_crosshaircolor_r', r);
+        sectionsState[section.id].cl_crosshaircolor_g = section.clamp('cl_crosshaircolor_g', g);
+        sectionsState[section.id].cl_crosshaircolor_b = section.clamp('cl_crosshaircolor_b', b);
+        syncControlsFromState();
+        refresh();
+      });
       wrap.append(btn);
     }
 
     return wrap;
+  }
+
+  function createQuickColorRow(section) {
+    const row = document.createElement('div');
+    row.className = 'setting-row';
+    row.dataset.setting = 'crosshair-quick-colors';
+
+    const labelWrap = document.createElement('div');
+    labelWrap.className = 'setting-label-wrap';
+
+    const label = document.createElement('div');
+    label.className = 'setting-label';
+    label.textContent = 'Quick colors';
+
+    const desc = document.createElement('span');
+    desc.className = 'setting-desc';
+    desc.textContent = 'Set RGB from a common preset. Fine-tune with the sliders below.';
+
+    labelWrap.append(label, desc);
+
+    const controlWrap = document.createElement('div');
+    controlWrap.className = 'setting-control-wrap';
+    controlWrap.append(createQuickColorControl(section));
+
+    row.append(labelWrap, controlWrap);
+    return row;
   }
 
   function createSelectControl(section, key, meta) {
@@ -1222,9 +1251,7 @@
 
     const label = document.createElement('label');
     label.className = 'setting-label';
-    if (key !== 'cl_crosshaircolor') {
-      label.htmlFor = `input-${key}`;
-    }
+    label.htmlFor = `input-${key}`;
 
     if (key in CHANNEL_SWATCH_COLORS) {
       label.classList.add('setting-label-with-swatch');
@@ -1257,9 +1284,7 @@
     } else if (meta.type === 'toggle') {
       control = createToggleControl(section, key, meta);
     } else if (meta.type === 'select') {
-      control = key === 'cl_crosshaircolor'
-        ? createColorPresetControl(section, key, meta)
-        : createSelectControl(section, key, meta);
+      control = createSelectControl(section, key, meta);
     }
 
     row.append(labelWrap, wrapSettingControl(section, key, control));
@@ -1736,6 +1761,9 @@
 
       for (const key of group.settings) {
         if (key === headerToggleKey) continue;
+        if (section.id === 'crosshair' && group.id === 'color' && key === 'cl_crosshaircolor_r') {
+          body.append(createQuickColorRow(section));
+        }
         body.append(createSettingRow(section, key));
       }
 
@@ -1960,11 +1988,7 @@
         if (meta.type === 'toggle') {
           input.checked = val === 1;
         } else if (meta.type === 'select') {
-          if (key === 'cl_crosshaircolor') {
-            updateColorPresetButtons();
-          } else {
-            input.value = String(val);
-          }
+          input.value = String(val);
         } else if (meta.type === 'range') {
           input.value = val;
           const row = input.closest('.setting-row');

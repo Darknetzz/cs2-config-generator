@@ -1,0 +1,33 @@
+cl_crosshair_drawoutline : true : cl, a, per_user : Draw a black outline around the crosshair for better visibility
+cl_crosshair_dynamic_maxdist_splitratio : 1 : cl, a, per_user : Style 2 only: how the bar length is divided between inner and outer bars once split. inner = cl_crosshairsize * (1 - ratio), outer = cl_crosshairsize * ratio. [0 - 1]
+cl_crosshair_dynamic_splitalpha_innermod : 0 : cl, a, per_user : Style 2 only: alpha multiplier for the INNER crosshair bars once they have split. [0 - 1]
+cl_crosshair_dynamic_splitalpha_outermod : 1 : cl, a, per_user : Style 2 only: alpha multiplier for the OUTER crosshair bars once they have split. [0.3 - 1]
+cl_crosshair_dynamic_splitdist : 4 : cl, a, per_user : Style 2: distance at which the crosshair bars split in two.
+cl_crosshair_dynamic_spread_limit : 255 : cl, a, per_user : The additional distance the dynamic elements are allowed to spread out to from the baseline of 128 pixels.
+cl_crosshair_friendly_warning : 1 : cl, a, release : 0: off, 1: on
+cl_crosshair_gap : 5 : cl, a, per_user : Offset added to the gap between the crosshair center and the bars.
+cl_crosshair_length : 11 : cl, a, per_user : Length of each crosshair bar, scaled with screen resolution
+cl_crosshair_recoil : false : cl, a, per_user : Crosshair follows the weapon's predicted recoil (aim punch)
+cl_crosshair_sniper_width : 1 : cl, a, per_user : If >1 sniper scope cross lines gain extra width (1 for single-pixel hairline)
+cl_crosshair_t : false : cl, a, per_user : T-style crosshair: hide the top bar
+cl_crosshair_thickness : 3 : cl, a, per_user : Thickness of the crosshair bars and circle, scaled with screen resolution (minimum 1 pixel)
+cl_crosshaircolor_a : 255 : cl, a, per_user : Crosshair opacity. 0 = fully transparent, 255 = fully opaque
+cl_crosshaircolor_b : 255 : cl, a, per_user : Crosshair color, blue component
+cl_crosshaircolor_g : 255 : cl, a, per_user : Crosshair color, green component
+cl_crosshaircolor_r : 0 : cl, a, per_user : Crosshair color, red component
+cl_crosshairdot : true : cl, a, per_user : Draw a dot at the center of the crosshair
+cl_crosshairstyle : 4 : cl, a, per_user : Crosshair style. 0 = Dynamic Cross, 1 = Dynamic Circle, 2 = Dynamic Cross (Legacy), 3 = Static Circle, 4 = Static Cross, 5 = Static Cross (Shot Feedback), 6 = Dot Only, 7 = Dynamic Quad. Styles 0, 1 and 7 track the weapon's actual inaccuracy.
+cl_grenadecrosshair_decoy : true : cl, a, per_user : Is the grenade crosshair enabled
+cl_grenadecrosshair_explosive : true : cl, a, per_user : Is the grenade crosshair enabled
+cl_grenadecrosshair_fire : true : cl, a, per_user : Is the grenade crosshair enabled
+cl_grenadecrosshair_flash : true : cl, a, per_user : Is the grenade crosshair enabled
+cl_grenadecrosshair_keepusercrosshair : true : cl, a, per_user : Keep drawing the user's crosshair while the grenade throw crosshair is shown
+cl_grenadecrosshair_smoke : true : cl, a, per_user : Is the grenade crosshair enabled
+cl_grenadecrosshairdelay_decoy : 2 : cl, a, per_user : How long should the pin be pulled for before showing the grenade crosshair
+cl_grenadecrosshairdelay_explosive : 2 : cl, a, per_user : How long should the pin be pulled for before showing the grenade crosshair
+cl_grenadecrosshairdelay_fire : 2 : cl, a, per_user : How long should the pin be pulled for before showing the grenade crosshair
+cl_grenadecrosshairdelay_flash : 2 : cl, a, per_user : How long should the pin be pulled for before showing the grenade crosshair
+cl_grenadecrosshairdelay_smoke : 2 : cl, a, per_user : How long should the pin be pulled for before showing the grenade crosshair
+cl_sniper_auto_rezoom : true : cl, a, user, per_user : Auto-rezoom snipers after a shot
+cl_ironsight_dot_scale : 1 : cl, a, per_user : Ironsight dot scale
+cl_ironsight_usecrosshaircolor : true : cl, a, per_user : Should the scope dot match the user's crosshair color

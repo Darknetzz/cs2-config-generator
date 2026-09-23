@@ -1,0 +1,181 @@
+> cvarlist cl_crosshair; cvarlist cl_grenadecrosshair; cvarlist cl_fixedcrosshair; cvarlist cl_sniper; cvarlist cl_ironsight; find crosshair; find limit; find circle; find quad; find unscope;
+[Console] cvar list
+--------------
+[Console] cl_crosshair_drawoutline                                                         : true             : cl, a, per_user                  : Draw a black outline around the crosshair for better visibility
+[Console] cl_crosshair_dynamic_maxdist_splitratio                                          : 1                : cl, a, per_user                  : Style 2 only: how the bar length is divided between inner and outer bars once split. inner = cl_crosshairsize * (1 - ratio), outer = cl_crosshairsize * ratio. [0 - 1]
+[Console] cl_crosshair_dynamic_splitalpha_innermod                                         : 0                : cl, a, per_user                  : Style 2 only: alpha multiplier for the INNER crosshair bars once they have split. [0 - 1]
+[Console] cl_crosshair_dynamic_splitalpha_outermod                                         : 1                : cl, a, per_user                  : Style 2 only: alpha multiplier for the OUTER crosshair bars once they have split. [0.3 - 1]
+[Console] cl_crosshair_dynamic_splitdist                                                   : 4                : cl, a, per_user                  : Style 2: distance at which the crosshair bars split in two.
+[Console] cl_crosshair_dynamic_spread_limit                                                : 255              : cl, a, per_user                  : The additional distance the dynamic elements are allowed to spread out to from the baseline of 128 pixels.
+[Console] cl_crosshair_friendly_warning                                                    : 1                : cl, a, release                   : 0: off, 1: on
+[Console] cl_crosshair_gap                                                                 : 5                : cl, a, per_user                  : Offset added to the gap between the crosshair center and the bars.
+[Console] cl_crosshair_length                                                              : 11               : cl, a, per_user                  : Length of each crosshair bar, scaled with screen resolution
+[Console] cl_crosshair_recoil                                                              : false            : cl, a, per_user                  : Crosshair follows the weapon's predicted recoil (aim punch)
+[Console] cl_crosshair_sniper_width                                                        : 1                : cl, a, per_user                  : If >1 sniper scope cross lines gain extra width (1 for single-pixel hairline)
+[Console] cl_crosshair_t                                                                   : false            : cl, a, per_user                  : T-style crosshair: hide the top bar
+[Console] cl_crosshair_thickness                                                           : 3                : cl, a, per_user                  : Thickness of the crosshair bars and circle, scaled with screen resolution (minimum 1 pixel)
+[Console] cl_crosshaircolor_a                                                              : 255              : cl, a, per_user                  : Crosshair opacity. 0 = fully transparent, 255 = fully opaque
+[Console] cl_crosshaircolor_b                                                              : 255              : cl, a, per_user                  : Crosshair color, blue component
+[Console] cl_crosshaircolor_g                                                              : 255              : cl, a, per_user                  : Crosshair color, green component
+[Console] cl_crosshaircolor_r                                                              : 0                : cl, a, per_user                  : Crosshair color, red component
+[Console] cl_crosshairdot                                                                  : true             : cl, a, per_user                  : Draw a dot at the center of the crosshair
+[Console] cl_crosshairstyle                                                                : 4                : cl, a, per_user                  : Crosshair style. 0 = Dynamic Cross, 1 = Dynamic Circle, 2 = Dynamic Cross (Legacy), 3 = Static Circle, 4 = Static Cross, 5 = Static Cross (Shot Feedback), 6 = Dot Only, 7 = Dynamic Quad. Styles 0, 1 and 7 track the weapon's actual inaccuracy.
+[Console] --------------
+ 19 convars/concommands for [cl_crosshair]
+[Console] cvar list
+--------------
+[Console] cl_grenadecrosshair_decoy                                                        : true             : cl, a, per_user                  : Is the grenade crosshair enabled
+[Console] cl_grenadecrosshair_explosive                                                    : true             : cl, a, per_user                  : Is the grenade crosshair enabled
+[Console] cl_grenadecrosshair_fire                                                         : true             : cl, a, per_user                  : Is the grenade crosshair enabled
+[Console] cl_grenadecrosshair_flash                                                        : true             : cl, a, per_user                  : Is the grenade crosshair enabled
+[Console] cl_grenadecrosshair_keepusercrosshair                                            : true             : cl, a, per_user                  : Keep drawing the user's crosshair while the grenade throw crosshair is shown
+[Console] cl_grenadecrosshair_smoke                                                        : true             : cl, a, per_user                  : Is the grenade crosshair enabled
+[Console] cl_grenadecrosshairdelay_decoy                                                   : 2                : cl, a, per_user                  : How long should the pin be pulled for before showing the grenade crosshair
+[Console] cl_grenadecrosshairdelay_explosive                                               : 2                : cl, a, per_user                  : How long should the pin be pulled for before showing the grenade crosshair
+[Console] cl_grenadecrosshairdelay_fire                                                    : 2                : cl, a, per_user                  : How long should the pin be pulled for before showing the grenade crosshair
+[Console] cl_grenadecrosshairdelay_flash                                                   : 2                : cl, a, per_user                  : How long should the pin be pulled for before showing the grenade crosshair
+[Console] cl_grenadecrosshairdelay_smoke                                                   : 2                : cl, a, per_user                  : How long should the pin be pulled for before showing the grenade crosshair
+[Console] --------------
+ 11 convars/concommands for [cl_grenadecrosshair]
+[Console] cvar list
+--------------
+[Console] --------------
+  0 convars/concommands for [cl_fixedcrosshair]
+[Console] cvar list
+--------------
+[Console] cl_sniper_auto_rezoom                                                            : true             : cl, a, user, per_user            : Auto-rezoom snipers after a shot
+[Console] cl_sniper_delay_unscope                                                          : false            : cl, a, release                   : 
+[Console] cl_sniper_show_inaccuracy                                                        : false            : cl, a, release                   : 
+[Console] --------------
+  3 convars/concommands for [cl_sniper]
+[Console] cvar list
+--------------
+[Console] cl_ironsight_dot_scale                                                           : 1                : cl, a, per_user                  : Ironsight dot scale
+[Console] cl_ironsight_usecrosshaircolor                                                   : true             : cl, a, per_user                  : Should the scope dot match the user's crosshair color
+[Console] --------------
+  2 convars/concommands for [cl_ironsight]
+[Console] name                                     value  default  flags                   help text
+[Console] ________________________________________ ______ ________ _______________________ __________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+[Console] cl_crosshair_drawoutline                 true            client archive per_user Draw a black outline around the crosshair for better visibility
+[Console] cl_crosshair_dynamic_maxdist_splitratio  1               client archive per_user Style 2 only: how the bar length is divided between inner and outer bars once split. inner = cl_crosshairsize * (1 - ratio), outer = cl_crosshairsize * ratio. [0 - 1]
+[Console] cl_crosshair_dynamic_splitalpha_innermod 0               client archive per_user Style 2 only: alpha multiplier for the INNER crosshair bars once they have split. [0 - 1]
+[Console] cl_crosshair_dynamic_splitalpha_outermod 1               client archive per_user Style 2 only: alpha multiplier for the OUTER crosshair bars once they have split. [0.3 - 1]
+[Console] cl_crosshair_dynamic_splitdist           4      3        client archive per_user Style 2: distance at which the crosshair bars split in two.
+[Console] cl_crosshair_dynamic_spread_limit        255             client archive per_user The additional distance the dynamic elements are allowed to spread out to from the baseline of 128 pixels.
+[Console] cl_crosshair_friendly_warning            1               client archive          0: off, 1: on
+[Console] cl_crosshair_gap                         5      4        client archive per_user Offset added to the gap between the crosshair center and the bars.
+[Console] cl_crosshair_length                      11     8        client archive per_user Length of each crosshair bar, scaled with screen resolution
+[Console] cl_crosshair_recoil                      false  true     client archive per_user Crosshair follows the weapon's predicted recoil (aim punch)
+[Console] cl_crosshair_sniper_width                1               client archive per_user If >1 sniper scope cross lines gain extra width (1 for single-pixel hairline)
+[Console] cl_crosshair_t                           false           client archive per_user T-style crosshair: hide the top bar
+[Console] cl_crosshair_thickness                   3      2        client archive per_user Thickness of the crosshair bars and circle, scaled with screen resolution (minimum 1 pixel)
+[Console] cl_crosshaircolor_a                      255             client archive per_user Crosshair opacity. 0 = fully transparent, 255 = fully opaque
+[Console] cl_crosshaircolor_b                      255    0        client archive per_user Crosshair color, blue component
+[Console] cl_crosshaircolor_g                      255             client archive per_user Crosshair color, green component
+[Console] cl_crosshaircolor_r                      0               client archive per_user Crosshair color, red component
+[Console] cl_crosshairdot                          true   false    client archive per_user Draw a dot at the center of the crosshair
+[Console] cl_crosshairstyle                        4      7        client archive per_user Crosshair style. 0 = Dynamic Cross, 1 = Dynamic Circle, 2 = Dynamic Cross (Legacy), 3 = Static Circle, 4 = Static Cross, 5 = Static Cross (Shot Feedback), 6 = Dot Only, 7 = Dynamic Quad. Styles 0, 1 and 7 track the weapon's actual inaccuracy.
+[Console] cl_draw_only_deathnotices                false           client                  For drawing only the crosshair and death notices (used for moviemaking)
+[Console] cl_grenadecrosshair_decoy                true            client archive per_user Is the grenade crosshair enabled
+[Console] cl_grenadecrosshair_explosive            true            client archive per_user Is the grenade crosshair enabled
+[Console] cl_grenadecrosshair_fire                 true            client archive per_user Is the grenade crosshair enabled
+[Console] cl_grenadecrosshair_flash                true            client archive per_user Is the grenade crosshair enabled
+[Console] cl_grenadecrosshair_keepusercrosshair    true            client archive per_user Keep drawing the user's crosshair while the grenade throw crosshair is shown
+[Console] cl_grenadecrosshair_smoke                true            client archive per_user Is the grenade crosshair enabled
+[Console] cl_grenadecrosshairdelay_decoy           2               client archive per_user How long should the pin be pulled for before showing the grenade crosshair
+[Console] cl_grenadecrosshairdelay_explosive       2               client archive per_user How long should the pin be pulled for before showing the grenade crosshair
+[Console] cl_grenadecrosshairdelay_fire            2               client archive per_user How long should the pin be pulled for before showing the grenade crosshair
+[Console] cl_grenadecrosshairdelay_flash           2               client archive per_user How long should the pin be pulled for before showing the grenade crosshair
+[Console] cl_grenadecrosshairdelay_smoke           2               client archive per_user How long should the pin be pulled for before showing the grenade crosshair
+[Console] cl_ironsight_usecrosshaircolor           true   false    client archive per_user Should the scope dot match the user's crosshair color
+[Console] cl_observed_bot_crosshair                0      2        client archive          Crosshair shown when observing a bot. 0 = show your crosshair, 1 = show your crosshair only when the bot can be taken over (otherwise default), 2 = always show the default crosshair
+[Console] cl_ping_fade_deadzone                    60              client archive          Distance from the crosshair over which the ping is completely invisible
+[Console] cl_ping_fade_distance                    300             client archive          Distance from the crosshair over which the ping fades
+[Console] cl_removedecals                                          client cheat            Remove the decals from the entity under the crosshair.
+[Console] cl_show_observer_crosshair               2               client archive          Show the crosshair of the player being observed. 0 = off, 1 = friends and party only, 2 = everyone
+[Console] cl_teamid_overhead_fade_near_crosshair   0.5             client archive          The amount to fade teamid when near the crosshair. Range is 0.0-1.0. 0: off
+[Console] crosshair                                true            client archive per_user
+[Console] ent_bonemergeplayer                                      game cheat              Bonemerge the player onto the entity under the crosshairs
+[Console] hidehud                                  0               client cheat            bitmask: 1=weapon selection, 2=flashlight, 4=all, 8=health, 16=player dead, 32=needssuit, 64=misc, 128=chat, 256=crosshair, 512=vehicle crosshair, 1024=in vehicle
+[Console] nav_create_indirect_connection                           game cheat              Create a connection between the selected area and the area pointed at by the crosshair.
+[Console] weapon_debug_spread_show                 false           client cheat per_user   Draws the current weapon's true inaccuracy + spread radius around the crosshair
+[Console] name                                              value        default  flags                         help text
+[Console] _________________________________________________ ____________ ________ _____________________________ ______________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+[Console] ammo_grenade_limit_default                        1                     game client replicated
+[Console] ammo_grenade_limit_flashbang                      2            1        game client replicated
+[Console] ammo_grenade_limit_total                          4            3        game client replicated
+[Console] ammo_item_limit_adrenaline                        5                     game client replicated
+[Console] ammo_item_limit_healthshot                        4                     game client replicated
+[Console] bot_eco_limit                                     2000                  game                          If nonzero, bots will not buy if their money falls below this amount.
+[Console] cl_change_callback_limit                          0.2                   client                        change callback msec warning limit
+[Console] cl_crosshair_dynamic_spread_limit                 255                   client archive per_user       The additional distance the dynamic elements are allowed to spread out to from the baseline of 128 pixels.
+[Console] cl_ent_attachment_filter_substrings               0                     client cheat                  If an attachment's name has any of the given substrings in it, it will be displayed. Substrings can be delimited by the ',' or '|' character.
+[Console] cl_ent_joint_filter_substrings                    0                     client cheat                  If a joint's name has any of the given substrings in it, it will be displayed. Substrings can be delimited by the ',' or '|' character.
+[Console] cl_inv_volatile_limits                            1773319430:0 0:0      client archive
+[Console] cl_ragdoll_limit                                  20                    client archive                Maximum number of ragdolls to show (-1 disables limit)
+[Console] ent_attachment_filter_substrings                  0                     game cheat                    If an attachment's name has any of the given substrings in it, it will be displayed. Substrings can be delimited by the ',' or '|' character.
+[Console] ent_joint_filter_substrings                       0                     game cheat                    If a joint's name has any of the given substrings in it, it will be displayed. Substrings can be delimited by the ',' or '|' character.
+[Console] fps_max                                           0            400      archive                       Frame rate limiter.  0=no limit.  Does not apply to dedicated server.
+[Console] fps_max_tools                                     120                   archive                       Additional frame rate limit while in tools mode and a window other than the game window has focus. Note that fps_max still applies, this only allows the maximum frame rate for tools mode to be lower. 0=no tools specific limit.
+[Console] fps_max_ui                                        200                   archive                       Frame rate limiter while the game UI is displayed.  0=no limit.  Does not apply to dedicated server.
+[Console] mm_dedicated_force_servers                        0                                                   Comma delimited list of ip:port of servers used to search for dedicated servers instead of searching for public servers. Use syntax `publicip1:port|privateip1:port,publicip2:port|privateip2:port` if your server is behind NAT. If the server is behind NAT, you can specify `0.0.0.0|privateip:port` and if server port is in the list of `mm_server_search_lan_ports` its public address should be automatically detected.
+[Console] mp_backup_restore_list_files                                            game                          Lists recent backup round files matching the prefix, most recent files first, accepts a numeric parameter to limit the number of files displayed
+[Console] mp_fraglimit                                      0                     game notify
+[Console] mp_items_prohibited                               0                     game client replicated        Set this convar to a comma-delimited list of definition indices of weapons that should be prohibited from use.
+[Console] mp_limitteams                                     2                     game notify replicated        Max # of players 1 team can have over another (0 disables check)
+[Console] mp_overtime_limit                                 0                     game client replicated        When overtime is enabled, only so many overtimes can be played
+[Console] mp_retake_max_consecutive_rounds_same_target_site 2                     game client replicated        Limit the number of consecutive rounds targeting the same site.
+[Console] mp_timelimit                                      0                     game client notify replicated game time per map in minutes
+[Console] mp_warmup_items_nocount_policy                    42                    game client replicated        Which items are unlimited during warmup (bitfield, 1=gun, 2=c4, 4=nade, 8=defuser/kevlar, 16=taser, 32=healthshot)
+[Console] mp_weapons_allow_typecount                        5                     game client replicated        Determines how many purchases of each weapon type allowed per player per round (0 to disallow purchasing, -1 to have no limit).
+[Console] mp_weapons_allow_zeus                             5            1        game client replicated        Determines how many Zeus purchases a player can make per round (0 to disallow, -1 to have no limit).
+[Console] nav_gen_degen_limit                               0.001                 game cheat
+[Console] nav_gen_opt_to_quads_angle_limit                  8                     game cheat
+[Console] nav_gen_opt_to_quads_planar_deviation_limit       4                     game cheat
+[Console] nav_gen_opt_to_quads_se_limit_end                 0.1                   game cheat
+[Console] nav_gen_opt_to_quads_se_limit_start               1e-05                 game cheat
+[Console] nav_gen_opt_to_quads_weld_limit_end               0.01                  game cheat
+[Console] nav_gen_opt_to_quads_weld_limit_start             0                     game cheat
+[Console] nav_gen_vertical_limit                            88                    game cheat
+[Console] nav_smooth_spring_forward_dist_time_limit         1                     game cheat
+[Console] net_limit_sv_recv_max_message_size_kb             32                                                  Server will reject message larger than N kb
+[Console] net_limit_sv_recv_segments_per_packet             50                                                  Server will reject packets with more than N segments
+[Console] net_limit_sv_recvbuffer_kb                        128                                                 Server will not buffer more than N kb from connected clients
+[Console] net_limit_sv_recvbuffer_msg                       100                                                 Server will not buffer more than N messages from connected clients
+[Console] spec_replay_rate_limit                            3                     replicated                    Minimum allowable pause between replay requests in seconds
+[Console] sv_annotation_limits_max_rounds_per_half          5                     game client replicated        Hard limit on maximum number of rounds (per half) that annotations can be seen in a live match
+[Console] sv_limit_buyrandom_per_life                       true                  game                          Enable to limit buyrandom command to only run once per player life
+[Console] sv_maxrate                                        0                     replicated                    Max bandwidth rate allowed on server, 0 == unlimited
+[Console] sv_maxuptimelimit                                 0                     game                          Number of hours to operate before trying sv_shutdown.
+[Console] sv_memlimit                                       0                     cheat                         If set, whenever a game ends, if the total memory used by the server is greater than this # of megabytes, the server will exit.
+[Console] sv_minrate                                        98304                 replicated                    Min bandwidth rate allowed on server, 0 == unlimited
+[Console] sv_snapshot_unlimited                             false                 replicated                    For debugging, don't throw away old snapshots so that if you break in debugger (on remote client or server) it won't require an uncompressed update to resume.  You may run out of memory of course...
+[Console] think_limit                                       0            10       game client replicated        Maximum think time in milliseconds, warning is printed if this is exceeded.
+[Console] tv_chattimelimit                                  0.2                                                 Limits spectators to chat only every n seconds
+[Console] tv_maxrate                                        0                                                   Max SourceTV spectator bandwidth rate allowed, 0 == unlimited
+[Console] vismon_trace_limit                                12                    game cheat
+[Console] weapon_accuracy_stack_boost_limit                 2                     game client replicated        Apply ladder inaccuracy to players boosted by a stack of this many (or more) players
+[Console] name                            value  default  flags                   help text
+[Console] _______________________________ ______ ________ _______________________ __________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+[Console] cl_crosshair_thickness          3      2        client archive per_user Thickness of the crosshair bars and circle, scaled with screen resolution (minimum 1 pixel)
+[Console] cl_crosshairstyle               4      7        client archive per_user Crosshair style. 0 = Dynamic Cross, 1 = Dynamic Circle, 2 = Dynamic Cross (Legacy), 3 = Static Circle, 4 = Static Cross, 5 = Static Cross (Shot Feedback), 6 = Dot Only, 7 = Dynamic Quad. Styles 0, 1 and 7 track the weapon's actual inaccuracy.
+[Console] cl_weapon_debug_show_accuracy   0               client cheat            Draws a circle representing the effective range with every shot.
+[Console] debugoverlay_circle_verts       24              cheat
+[Console] joy_circle_correct_mode         1               client archive per_user
+[Console] joy_circle_correct_mode_vehicle 2               client archive per_user
+[Console] nav_test_boundary_zone_circle   0               game cheat
+[Console] name                                        value  default  flags                   help text
+[Console] ___________________________________________ ______ ________ _______________________ __________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+[Console] cl_crosshairstyle                           4      7        client archive per_user Crosshair style. 0 = Dynamic Cross, 1 = Dynamic Circle, 2 = Dynamic Cross (Legacy), 3 = Static Circle, 4 = Static Cross, 5 = Static Cross (Shot Feedback), 6 = Dot Only, 7 = Dynamic Quad. Styles 0, 1 and 7 track the weapon's actual inaccuracy.
+[Console] nav_gen_opt_to_quads                        true            game cheat
+[Console] nav_gen_opt_to_quads_angle_limit            8               game cheat
+[Console] nav_gen_opt_to_quads_num_steps              6               game cheat
+[Console] nav_gen_opt_to_quads_planar_deviation_limit 4               game cheat
+[Console] nav_gen_opt_to_quads_se_limit_end           0.1             game cheat
+[Console] nav_gen_opt_to_quads_se_limit_start         1e-05           game cheat
+[Console] nav_gen_opt_to_quads_weld_limit_end         0.01            game cheat
+[Console] nav_gen_opt_to_quads_weld_limit_start       0               game cheat
+[Console] r_flashlightquadratic                       0               client cheat replicated
+[Console] name                    value  default  flags          help text
+[Console] _______________________ ______ ________ ______________ __________
+[Console] cl_sniper_delay_unscope false           client archive

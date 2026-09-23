@@ -30,6 +30,8 @@ const ConfigSections = (() => {
     for (const section of ALL) {
       if (section.kind === 'binds') continue;
       if (key in section.SETTINGS) return section;
+      if (section.LEGACY_KEY_MAP && key in section.LEGACY_KEY_MAP) return section;
+      if (section.IMPORT_ALIASES?.has(key)) return section;
     }
     return null;
   }

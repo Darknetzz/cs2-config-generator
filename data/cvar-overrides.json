@@ -6,5 +6,133 @@
     "description": "When enabled (1), shooting a dropped grenade on the ground activates/detonates it. Requires sv_cheats 1. Disabled (0) by default.",
     "accepted": "0 / 1",
     "kind": "cvar"
+  },
+  {
+    "name": "cl_crosshairstyle",
+    "flags": ["cl", "a", "per_user"],
+    "default": "7",
+    "description": "Crosshair style. 0 = Dynamic Cross, 1 = Dynamic Circle, 2 = Dynamic Cross (Classic), 3 = Static Circle, 4 = Static Cross, 5 = Dynamic Cross (Legacy / Shot Feedback), 6 = Dot Only, 7 = Dynamic Quad. Styles 0, 1 and 7 track the weapon's actual inaccuracy.",
+    "accepted": "0 / 1 / 2 / 3 / 4 / 5 / 6 / 7",
+    "kind": "cvar"
+  },
+  {
+    "name": "cl_crosshair_length",
+    "flags": ["cl", "a", "per_user"],
+    "default": "8",
+    "description": "Length of each crosshair bar, scaled with screen resolution",
+    "accepted": "0 – 100 (step 1)",
+    "kind": "cvar"
+  },
+  {
+    "name": "cl_crosshair_gap",
+    "flags": ["cl", "a", "per_user"],
+    "default": "4",
+    "description": "Offset added to the gap between the crosshair center and the bars.",
+    "accepted": "-50 – 50 (step 1)",
+    "kind": "cvar"
+  },
+  {
+    "name": "cl_crosshair_thickness",
+    "flags": ["cl", "a", "per_user"],
+    "default": "2",
+    "description": "Thickness of the crosshair bars and circle, scaled with screen resolution (minimum 1 pixel)",
+    "accepted": "1 – 20 (step 1)",
+    "kind": "cvar"
+  },
+  {
+    "name": "cl_crosshaircolor_a",
+    "flags": ["cl", "a", "per_user"],
+    "default": "255",
+    "description": "Crosshair opacity. 0 = fully transparent, 255 = fully opaque",
+    "accepted": "0 – 255 (step 1)",
+    "kind": "cvar"
+  },
+  {
+    "name": "cl_crosshair_dynamic_spread_limit",
+    "flags": ["cl", "a", "per_user"],
+    "default": "255",
+    "description": "The additional distance the dynamic elements are allowed to spread out to from the baseline of 128 pixels.",
+    "accepted": "0 – 255 (step 1)",
+    "kind": "cvar"
+  },
+  {
+    "name": "cl_crosshair_dynamic_splitdist",
+    "flags": ["cl", "a", "per_user"],
+    "default": "3",
+    "description": "Style 2: distance at which the crosshair bars split in two.",
+    "accepted": "0 – 20 (step 1)",
+    "kind": "cvar"
+  },
+  {
+    "name": "cl_crosshair_dynamic_splitalpha_innermod",
+    "flags": ["cl", "a", "per_user"],
+    "default": "0",
+    "description": "Style 2 only: alpha multiplier for the INNER crosshair bars once they have split. [0 - 1]",
+    "accepted": "0 – 1 (step 0.05)",
+    "kind": "cvar"
+  },
+  {
+    "name": "cl_crosshair_dynamic_splitalpha_outermod",
+    "flags": ["cl", "a", "per_user"],
+    "default": "1",
+    "description": "Style 2 only: alpha multiplier for the OUTER crosshair bars once they have split. [0.3 - 1]",
+    "accepted": "0 – 1 (step 0.05)",
+    "kind": "cvar"
+  },
+  {
+    "name": "cl_crosshair_dynamic_maxdist_splitratio",
+    "flags": ["cl", "a", "per_user"],
+    "default": "1",
+    "description": "Style 2 only: how the bar length is divided between inner and outer bars once split. inner = length * (1 - ratio), outer = length * ratio. [0 - 1]",
+    "accepted": "0 – 1 (step 0.05)",
+    "kind": "cvar"
+  },
+  {
+    "name": "cl_crosshair_drawoutline",
+    "flags": ["cl", "a", "per_user"],
+    "default": "true",
+    "description": "Draw a black outline around the crosshair for better visibility",
+    "accepted": "0 / 1",
+    "kind": "cvar"
+  },
+  {
+    "name": "cl_crosshair_recoil",
+    "flags": ["cl", "a", "per_user"],
+    "default": "true",
+    "description": "Crosshair follows the weapon's predicted recoil (aim punch)",
+    "accepted": "0 / 1",
+    "kind": "cvar"
+  },
+  {
+    "name": "cl_crosshairdot",
+    "flags": ["cl", "a", "per_user"],
+    "default": "false",
+    "description": "Draw a dot at the center of the crosshair",
+    "accepted": "0 / 1",
+    "kind": "cvar"
+  },
+  {
+    "name": "cl_crosshair_friendly_warning",
+    "flags": ["cl", "a", "release"],
+    "default": "1",
+    "description": "0: off, 1: on",
+    "accepted": "0 / 1",
+    "kind": "cvar"
+  },
+  {
+    "name": "cl_sniper_auto_rezoom",
+    "flags": ["cl", "a", "user", "per_user"],
+    "default": "true",
+    "description": "Auto-rezoom snipers after a shot",
+    "accepted": "0 / 1",
+    "kind": "cvar"
+  },
+  {
+    "name": "cl_sniper_delay_unscope",
+    "flags": ["cl", "a", "release"],
+    "default": "false",
+    "description": "Delay unscope so the scope view lingers briefly (cannot fire until fully unscoped).",
+    "accepted": "0 / 1",
+    "kind": "cvar"
   }
 ]

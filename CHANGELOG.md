@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Rush Hour crosshair styles: Dynamic Cross, Dynamic Circle, Dynamic Cross Classic, Static Circle, Static Cross, Legacy/Shot Feedback, Dot Only, and Dynamic Quad (new default)
+- `cl_crosshair_dynamic_spread_limit` for dynamic style expansion
+- Sniper options: delay unscope and auto-rezoom
+- Quick RGB color chips (replaces the old preset color cvar)
 - Live HUD canvas preview (scale, color, safe zone, target ID, loadout, team counter, overhead IDs; CT/T toggle is preview-only)
 - Load / download CS2 stock defaults (engine ConVar values for a fresh install) from the export panel
 - Buy binds: autobuy (F3), rebuy (F2), configurable weapon/gear buys, grenade buys, and quick-switch to flash / smoke / HE / molotov / decoy
@@ -27,6 +31,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Crosshair cvars updated for Rush Hour: `cl_crosshair_length` / `_gap` / `_thickness`, `cl_crosshaircolor_a`, styles 0–7, resolution-independent preview
+- Import / localStorage / custom presets migrate legacy crosshair names (`cl_crosshairsize`, `cl_crosshairalpha`, color presets, etc.)
+- Stock crosshair defaults match Dynamic Quad (style 7)
+- Pro presets migrated to the new cvar names (pre-update length/gap units are best-effort)
+- Command catalog refresh keeps public dumps when `--input` is used, and accepts Rush Hour console dumps
 - HUD preview redrawn to closer CS2 layout (agent portrait, HP/armor strip, weapon silhouette + ammo, grenade column, top scoreboard) instead of generic panels
 - Site nav links styled as prominent pill buttons (clearer current-page state)
 - FPS telemetry overlays use Never / Always / When elevated (0 / 1 / 2) to match CS2
@@ -39,7 +48,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Viewmodel (and radar) preview no longer grows scrollbars / resizes in a loop; canvases fill the wrap at device-pixel resolution so the preview stays sharp
-- Crosshair Gap slider updates the preview for classic static style 4 (and other styles that use `cl_crosshairgap`)
+- Crosshair Gap slider updates the preview for classic static style 4 (and other styles that use gap)
 - Strip markdown backslashes and HTML entities from command descriptions in the catalog
 
 ### Removed
+
+- Legacy crosshair cvars from the generator UI: `cl_crosshairsize` / `gap` / `thickness`, `cl_crosshairalpha` / `usealpha`, `cl_crosshaircolor` presets, outline thickness, fixed gap, and weapon gap value

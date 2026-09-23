@@ -1,21 +1,19 @@
 /**
  * Pro player crosshair presets.
- * Values sourced from publicly shared crosshair codes (Jaxon.GG, April 2026).
+ * Migrated to Rush Hour cvars (Sep 2026). Length/gap/thickness units changed with
+ * resolution-independent crosshairs — values are best-effort from pre-update codes.
  */
 const CrosshairPresets = (() => {
   const CYAN = {
-    cl_crosshaircolor: 4,
     cl_crosshaircolor_r: 0,
     cl_crosshaircolor_g: 255,
     cl_crosshaircolor_b: 255,
-    cl_crosshairusealpha: 1,
-    cl_crosshairalpha: 255,
+    cl_crosshaircolor_a: 255,
   };
 
   const BASE = {
     cl_crosshairstyle: 4,
     cl_crosshair_recoil: 0,
-    cl_crosshairgap_useweaponvalue: 0,
     cl_crosshair_t: 0,
     cl_crosshair_drawoutline: 0,
     cl_crosshairdot: 0,
@@ -30,10 +28,9 @@ const CrosshairPresets = (() => {
       state: applyPresetState({
         ...BASE,
         cl_crosshairdot: 1,
-        cl_crosshairsize: 1.5,
-        cl_crosshairthickness: 0,
-        cl_crosshairgap: -3,
-        cl_crosshaircolor: 2,
+        cl_crosshair_length: 2,
+        cl_crosshair_thickness: 1,
+        cl_crosshair_gap: -3,
         cl_crosshaircolor_r: 255,
         cl_crosshaircolor_g: 255,
         cl_crosshaircolor_b: 0,
@@ -45,9 +42,9 @@ const CrosshairPresets = (() => {
       team: 'Vitality',
       state: applyPresetState({
         ...BASE,
-        cl_crosshairsize: 1.5,
-        cl_crosshairthickness: 0,
-        cl_crosshairgap: -3,
+        cl_crosshair_length: 2,
+        cl_crosshair_thickness: 1,
+        cl_crosshair_gap: -3,
       }),
     },
     {
@@ -58,9 +55,9 @@ const CrosshairPresets = (() => {
         ...BASE,
         cl_crosshairstyle: 5,
         cl_crosshairdot: 1,
-        cl_crosshairsize: 1,
-        cl_crosshairthickness: 0,
-        cl_crosshairgap: -2,
+        cl_crosshair_length: 1,
+        cl_crosshair_thickness: 1,
+        cl_crosshair_gap: -2,
       }),
     },
     {
@@ -69,9 +66,9 @@ const CrosshairPresets = (() => {
       team: 'Falcons',
       state: applyPresetState({
         ...BASE,
-        cl_crosshairsize: 1,
-        cl_crosshairthickness: 1,
-        cl_crosshairgap: -4,
+        cl_crosshair_length: 1,
+        cl_crosshair_thickness: 1,
+        cl_crosshair_gap: -4,
       }),
     },
     {
@@ -80,9 +77,9 @@ const CrosshairPresets = (() => {
       team: 'Falcons',
       state: applyPresetState({
         ...BASE,
-        cl_crosshairsize: 1,
-        cl_crosshairthickness: 1,
-        cl_crosshairgap: -4,
+        cl_crosshair_length: 1,
+        cl_crosshair_thickness: 1,
+        cl_crosshair_gap: -4,
       }),
     },
     {
@@ -91,10 +88,9 @@ const CrosshairPresets = (() => {
       team: 'Vitality',
       state: applyPresetState({
         ...BASE,
-        cl_crosshairsize: 2,
-        cl_crosshairthickness: 0.5,
-        cl_crosshairgap: -3,
-        cl_crosshaircolor: 1,
+        cl_crosshair_length: 2,
+        cl_crosshair_thickness: 1,
+        cl_crosshair_gap: -3,
         cl_crosshaircolor_r: 0,
         cl_crosshaircolor_g: 255,
         cl_crosshaircolor_b: 0,
@@ -106,9 +102,9 @@ const CrosshairPresets = (() => {
       team: 'Astralis',
       state: applyPresetState({
         ...BASE,
-        cl_crosshairsize: 1,
-        cl_crosshairthickness: 1,
-        cl_crosshairgap: -4,
+        cl_crosshair_length: 1,
+        cl_crosshair_thickness: 1,
+        cl_crosshair_gap: -4,
       }),
     },
     {
@@ -118,12 +114,10 @@ const CrosshairPresets = (() => {
       state: applyPresetState({
         ...BASE,
         cl_crosshairdot: 1,
-        cl_crosshairsize: 0,
-        cl_crosshairthickness: 1,
-        cl_crosshairgap: -5,
+        cl_crosshair_length: 0,
+        cl_crosshair_thickness: 1,
+        cl_crosshair_gap: -5,
         cl_crosshair_drawoutline: 1,
-        cl_crosshair_outlinethickness: 1,
-        cl_crosshaircolor: 5,
         cl_crosshaircolor_r: 255,
         cl_crosshaircolor_g: 100,
         cl_crosshaircolor_b: 255,
@@ -135,14 +129,13 @@ const CrosshairPresets = (() => {
       team: 'Aurora',
       state: applyPresetState({
         ...BASE,
-        cl_crosshairsize: 3,
-        cl_crosshairthickness: 0.5,
-        cl_crosshairgap: 0,
-        cl_crosshaircolor: 5,
+        cl_crosshair_length: 3,
+        cl_crosshair_thickness: 1,
+        cl_crosshair_gap: 0,
         cl_crosshaircolor_r: 50,
         cl_crosshaircolor_g: 250,
         cl_crosshaircolor_b: 50,
-        cl_crosshairalpha: 200,
+        cl_crosshaircolor_a: 200,
       }),
     },
     {
@@ -151,10 +144,9 @@ const CrosshairPresets = (() => {
       team: 'Falcons',
       state: applyPresetState({
         ...BASE,
-        cl_crosshairsize: 1,
-        cl_crosshairthickness: 1,
-        cl_crosshairgap: -4,
-        cl_crosshaircolor: 5,
+        cl_crosshair_length: 1,
+        cl_crosshair_thickness: 1,
+        cl_crosshair_gap: -4,
         cl_crosshaircolor_r: 0,
         cl_crosshaircolor_g: 255,
         cl_crosshaircolor_b: 135,

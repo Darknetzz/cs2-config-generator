@@ -52,7 +52,12 @@ function createSettingsModule({ id, label, fileName, icon, groups, settings }) {
   function isEnabled(key, state) {
     const meta = SETTINGS[key];
     if (!meta?.enabledWhen) return true;
-    return Number(state[meta.enabledWhen.key]) === meta.enabledWhen.value;
+    const cond = meta.enabledWhen;
+    const current = Number(state[cond.key]);
+    if (Array.isArray(cond.values)) {
+      return cond.values.includes(current);
+    }
+    return current === cond.value;
   }
 
   function isAtDefault(key, state) {
