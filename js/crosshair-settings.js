@@ -216,7 +216,7 @@ const CROSSHAIR_SETTINGS = {
     description: 'Offset added to the gap between the crosshair center and the bars.',
     type: 'range',
     default: 4,
-    min: -50,
+    min: 0,
     max: 128,
     step: 1,
     enabledWhen: { key: 'cl_crosshairstyle', values: CROSSHAIR_GAP_STYLES },

@@ -32,7 +32,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Crosshair Gap range is now -50–128 (was -50–50)
+- Crosshair Gap range is now 0–128 (matches in-game Style Settings; was -50–50)
+- Pro presets: negative legacy gaps clamped to 0
 - Crosshair Style Settings visibility matches in-game options per style (Length / Gap / Center Dot / T / Dynamic Spread Limit / Classic split controls)
 - Export panel: **Changed only** / **All settings** toggle replaces the separate **Copy changed only** button; preview and downloads follow the same mode
 - Crosshair cvars updated for Rush Hour: `cl_crosshair_length` / `_gap` / `_thickness`, `cl_crosshaircolor_a`, styles 0–7, resolution-independent preview

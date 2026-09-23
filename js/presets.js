@@ -2,6 +2,7 @@
  * Pro player crosshair presets.
  * Migrated to Rush Hour cvars (Sep 2026). Length/gap/thickness units changed with
  * resolution-independent crosshairs — values are best-effort from pre-update codes.
+ * Gap is clamped to the in-game Style Settings range (0–128); old negative gaps → 0.
  */
 const CrosshairPresets = (() => {
   const CYAN = {
@@ -30,7 +31,7 @@ const CrosshairPresets = (() => {
         cl_crosshairdot: 1,
         cl_crosshair_length: 2,
         cl_crosshair_thickness: 1,
-        cl_crosshair_gap: -3,
+        cl_crosshair_gap: 0,
         cl_crosshaircolor_r: 255,
         cl_crosshaircolor_g: 255,
         cl_crosshaircolor_b: 0,
@@ -44,7 +45,7 @@ const CrosshairPresets = (() => {
         ...BASE,
         cl_crosshair_length: 2,
         cl_crosshair_thickness: 1,
-        cl_crosshair_gap: -3,
+        cl_crosshair_gap: 0,
       }),
     },
     {
@@ -57,7 +58,7 @@ const CrosshairPresets = (() => {
         cl_crosshairdot: 1,
         cl_crosshair_length: 1,
         cl_crosshair_thickness: 1,
-        cl_crosshair_gap: -2,
+        cl_crosshair_gap: 0,
       }),
     },
     {
@@ -68,7 +69,7 @@ const CrosshairPresets = (() => {
         ...BASE,
         cl_crosshair_length: 1,
         cl_crosshair_thickness: 1,
-        cl_crosshair_gap: -4,
+        cl_crosshair_gap: 0,
       }),
     },
     {
@@ -79,7 +80,7 @@ const CrosshairPresets = (() => {
         ...BASE,
         cl_crosshair_length: 1,
         cl_crosshair_thickness: 1,
-        cl_crosshair_gap: -4,
+        cl_crosshair_gap: 0,
       }),
     },
     {
@@ -90,7 +91,7 @@ const CrosshairPresets = (() => {
         ...BASE,
         cl_crosshair_length: 2,
         cl_crosshair_thickness: 1,
-        cl_crosshair_gap: -3,
+        cl_crosshair_gap: 0,
         cl_crosshaircolor_r: 0,
         cl_crosshaircolor_g: 255,
         cl_crosshaircolor_b: 0,
@@ -104,7 +105,7 @@ const CrosshairPresets = (() => {
         ...BASE,
         cl_crosshair_length: 1,
         cl_crosshair_thickness: 1,
-        cl_crosshair_gap: -4,
+        cl_crosshair_gap: 0,
       }),
     },
     {
@@ -116,7 +117,7 @@ const CrosshairPresets = (() => {
         cl_crosshairdot: 1,
         cl_crosshair_length: 0,
         cl_crosshair_thickness: 1,
-        cl_crosshair_gap: -5,
+        cl_crosshair_gap: 0,
         cl_crosshair_drawoutline: 1,
         cl_crosshaircolor_r: 255,
         cl_crosshaircolor_g: 100,
@@ -146,7 +147,7 @@ const CrosshairPresets = (() => {
         ...BASE,
         cl_crosshair_length: 1,
         cl_crosshair_thickness: 1,
-        cl_crosshair_gap: -4,
+        cl_crosshair_gap: 0,
         cl_crosshaircolor_r: 0,
         cl_crosshaircolor_g: 255,
         cl_crosshaircolor_b: 135,
