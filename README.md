@@ -1,6 +1,6 @@
 # CS2 Config Generator
 
-A lightweight web app for building Counter-Strike 2 configs. Design your crosshair with a live preview, tweak viewmodel / HUD / radar / FPS settings with live viewmodel and radar previews, pick useful binds, then copy console commands or download modular and combined `.cfg` files.
+A lightweight web app for building Counter-Strike 2 configs. Design your crosshair with a live preview, tweak viewmodel / HUD / radar / FPS settings with live viewmodel, HUD, and radar previews, pick useful binds, then copy console commands or download modular and combined `.cfg` files.
 
 **Repository:** [github.com/Darknetzz/cs2-config-generator](https://github.com/Darknetzz/cs2-config-generator)
 
@@ -12,8 +12,8 @@ A lightweight web app for building Counter-Strike 2 configs. Design your crossha
 - **Commands reference** — searchable/sortable list of all CS2 console commands and cvars, with prefix-based category filters ([commands.html](commands.html))
 - **Useful binds** — buy default / rebuy / weapons / grenades, grenade quick-switch, drop bomb, spinbot, mute team, scroll jump, practice helpers, and more — opt-in with editable keys (picker for mouse buttons and other CS2 keys); export labels each bind with a `//` comment
 - **Live crosshair preview** — true 1:1 size (64×64 px at 1080p) with dynamic style animation
-- **Live viewmodel & radar previews** — canvas previews for weapon position and in-game radar (Ancient minimap plate)
-- **Expand preview** — click a preview to open a live full-size modal (crosshair, viewmodel, or radar)
+- **Live viewmodel, HUD & radar previews** — canvas previews for weapon position, stylized competitive HUD chrome, and in-game radar (Ancient minimap plate)
+- **Expand preview** — click a preview to open a live full-size modal (crosshair, viewmodel, HUD, or radar)
 - **Preview modes** — normal, grenade lineup reticle, and sniper scope overlay (crosshair)
 - **Background options** — solid colors and CS2 map screenshots with thumbnails
 - **Zoom** — scale the crosshair preview from 50% to 300%
@@ -112,6 +112,7 @@ The page defaults to **Auto**, which follows your system light/dark preference. 
 │   ├── commands-page.js       # Commands reference UI
 │   ├── crosshair-renderer.js  # Crosshair canvas preview
 │   ├── viewmodel-renderer.js  # Viewmodel canvas preview
+│   ├── hud-renderer.js        # HUD canvas preview
 │   ├── radar-renderer.js      # Radar canvas preview
 │   ├── custom-presets.js      # User-saved crosshair presets
 │   ├── preview-mode.js        # Normal / lineup / sniper preview modes

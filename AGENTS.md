@@ -73,7 +73,7 @@ Do not rewrite published version sections; put follow-ups under `[Unreleased]` o
 | `scripts/release.sh` | Rotate CHANGELOG, commit, annotated SemVer tag (no push) |
 | `CHANGELOG.md` | Keep a Changelog (`[Unreleased]` + released sections) |
 | `cliff.toml` | git-cliff config for draft notes / bump suggestions |
-| `js/*-renderer.js` | Canvas previews (crosshair, viewmodel, radar) |
+| `js/*-renderer.js` | Canvas previews (crosshair, viewmodel, HUD, radar) |
 | `js/app.js` | UI, state, persistence (`localStorage`), share URLs |
 | `js/presets.js` / `custom-presets.js` | Pro + user crosshair presets |
 

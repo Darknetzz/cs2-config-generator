@@ -42,7 +42,7 @@
           <a href="https://github.com/Darknetzz/cs2-config-generator" data-icon="github" target="_blank" rel="noopener noreferrer">GitHub</a>
         </nav>
         <h1>CS2 Config Generator</h1>
-        <p class="subtitle">Build crosshair, viewmodel, HUD, radar, FPS, and binds — preview crosshair, viewmodel, and radar live, then copy or download a .cfg.</p>
+        <p class="subtitle">Build crosshair, viewmodel, HUD, radar, FPS, and binds — preview crosshair, viewmodel, HUD, and radar live, then copy or download a .cfg.</p>
       </div>
       <div id="theme-toggle" class="theme-toggle" role="group" aria-label="Color theme">
         <button type="button" class="theme-btn" data-theme="system" aria-pressed="true">Auto</button>
@@ -202,6 +202,31 @@
             Scoreboard and alternate zoom toggles are preview-only and are not exported.
           </p>
         </div>
+
+        <div id="hud-preview" class="hud-preview" hidden>
+          <div class="hud-preview-toggles">
+            <div class="hud-preview-toggle" id="hud-team-toggle" role="group" aria-label="Preview team">
+              <span class="toolbar-label">Team</span>
+              <div class="mode-toggle">
+                <button type="button" class="mode-btn active" data-team="ct" aria-pressed="true">CT</button>
+                <button type="button" class="mode-btn" data-team="t" aria-pressed="false">T</button>
+              </div>
+            </div>
+          </div>
+          <div
+            class="canvas-wrap hud-canvas-wrap canvas-wrap-expandable"
+            id="hud-canvas-wrap"
+            role="button"
+            tabindex="0"
+            aria-label="Expand HUD preview"
+          >
+            <canvas id="hud-canvas" aria-label="HUD preview"></canvas>
+          </div>
+          <p class="preview-note muted">
+            Approximate CS2 competitive HUD layout (portrait, HP/armor, money, weapon/ammo, grenades, scoreboard).
+            Not a pixel-perfect in-game plate — team toggle is preview-only and is not exported.
+          </p>
+        </div>
       </div>
 
       <div id="section-summary" class="section-summary" hidden>
@@ -312,6 +337,7 @@
   <script src="js/crosshair-renderer.js"></script>
   <script src="js/viewmodel-renderer.js"></script>
   <script src="js/radar-renderer.js"></script>
+  <script src="js/hud-renderer.js"></script>
   <script src="js/commands.js"></script>
   <script src="js/stock-defaults.js"></script>
   <script src="js/app.js"></script>

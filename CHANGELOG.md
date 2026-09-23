@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Live HUD canvas preview (scale, color, safe zone, target ID, loadout, team counter, overhead IDs; CT/T toggle is preview-only)
 - Load / download CS2 stock defaults (engine ConVar values for a fresh install) from the export panel
 - Buy binds: autobuy (F3), rebuy (F2), configurable weapon/gear buys, grenade buys, and quick-switch to flash / smoke / HE / molotov / decoy
 - `mp_shoot_dropped_grenades` in the Commands catalog (curated override; shoot dropped grenades to activate them, needs `sv_cheats 1`)
@@ -26,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- HUD preview redrawn to closer CS2 layout (agent portrait, HP/armor strip, weapon silhouette + ammo, grenade column, top scoreboard) instead of generic panels
 - Site nav links styled as prominent pill buttons (clearer current-page state)
 - FPS telemetry overlays use Never / Always / When elevated (0 / 1 / 2) to match CS2
 - Radar preview uses in-game Ancient minimap plates (round/square chrome, zone label, CS2-style icons) instead of a schematic placeholder

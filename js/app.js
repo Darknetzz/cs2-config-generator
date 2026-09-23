@@ -27,6 +27,7 @@
     crosshair: 'Crosshair preview',
     viewmodel: 'Viewmodel preview',
     radar: 'Radar preview',
+    hud: 'HUD preview',
   };
 
   const sectionMounts = {};
@@ -38,6 +39,7 @@
     crosshairPreview: document.getElementById('crosshair-preview'),
     viewmodelPreview: document.getElementById('viewmodel-preview'),
     radarPreview: document.getElementById('radar-preview'),
+    hudPreview: document.getElementById('hud-preview'),
     crosshairToolbarExtras: document.getElementById('crosshair-toolbar-extras'),
     sectionSummary: document.getElementById('section-summary'),
     sectionSummaryTitle: document.getElementById('section-summary-title'),
@@ -47,6 +49,7 @@
     previewCanvas: document.getElementById('preview-canvas'),
     viewmodelCanvas: document.getElementById('viewmodel-canvas'),
     radarCanvas: document.getElementById('radar-canvas'),
+    hudCanvas: document.getElementById('hud-canvas'),
     previewModal: document.getElementById('preview-modal'),
     previewModalTitle: document.getElementById('preview-modal-title'),
     previewModalClose: document.getElementById('preview-modal-close'),
@@ -61,6 +64,7 @@
     canvasWrap: document.getElementById('crosshair-canvas-wrap'),
     viewmodelCanvasWrap: document.getElementById('viewmodel-canvas-wrap'),
     radarCanvasWrap: document.getElementById('radar-canvas-wrap'),
+    hudCanvasWrap: document.getElementById('hud-canvas-wrap'),
     zoomInBtn: document.getElementById('zoom-in-btn'),
     zoomOutBtn: document.getElementById('zoom-out-btn'),
     zoomLabel: document.getElementById('zoom-label'),
@@ -105,10 +109,15 @@
     return sectionsState.radar;
   }
 
+  function getHudState() {
+    return sectionsState.hud;
+  }
+
   function hasVisualPreview() {
     return activeSectionId === 'crosshair'
       || activeSectionId === 'viewmodel'
-      || activeSectionId === 'radar';
+      || activeSectionId === 'radar'
+      || activeSectionId === 'hud';
   }
 
   function getActiveSection() {
@@ -209,6 +218,14 @@
     );
   }
 
+  function getHudDisplaySize() {
+    return getAspectWrapDisplaySize(
+      els.hudCanvasWrap,
+      HudRenderer.ASPECT,
+      HudRenderer.PREVIEW_SIZE,
+    );
+  }
+
   function fitAspectSize(aspect, maxW, maxH) {
     let width = maxW;
     let height = width / aspect;
@@ -231,6 +248,9 @@
     }
     if (sectionId === 'viewmodel') {
       return fitAspectSize(ViewmodelRenderer.ASPECT || (16 / 9), maxW, maxH);
+    }
+    if (sectionId === 'hud') {
+      return fitAspectSize(HudRenderer.ASPECT || (16 / 9), maxW, maxH);
     }
     return fitAspectSize(RadarRenderer.ASPECT || (16 / 9), maxW, maxH);
   }
@@ -289,7 +309,8 @@
     const crosshairChanged = syncCanvasSize(els.previewCanvas, getCrosshairDisplaySize());
     const viewmodelChanged = syncCanvasSize(els.viewmodelCanvas, getViewmodelDisplaySize(), { fill: true });
     const radarChanged = syncCanvasSize(els.radarCanvas, getRadarDisplaySize(), { fill: true });
-    if (crosshairChanged || viewmodelChanged || radarChanged) {
+    const hudChanged = syncCanvasSize(els.hudCanvas, getHudDisplaySize(), { fill: true });
+    if (crosshairChanged || viewmodelChanged || radarChanged || hudChanged) {
       CrosshairRenderer.invalidateBgCache();
     }
   }
@@ -343,6 +364,18 @@
     );
   }
 
+  function initHudPreviewToggles() {
+    const root = document.getElementById('hud-team-toggle');
+    root?.querySelectorAll('[data-team]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        HudRenderer.setTeam(btn.dataset.team);
+        setTogglePressed(root, '[data-team]', btn.dataset.team, 'data-team');
+        updateHudPreview();
+      });
+    });
+    setTogglePressed(root, '[data-team]', HudRenderer.getTeam(), 'data-team');
+  }
+
   async function updateViewmodelPreview() {
     if (activeSectionId !== 'viewmodel') return;
     syncCanvasDimensions();
@@ -385,6 +418,20 @@
     manageRadarAnimation();
   }
 
+  function updateHudPreview() {
+    if (activeSectionId !== 'hud') return;
+    syncCanvasDimensions();
+    if (getModalCanvasIf('hud') && syncModalCanvasSize()) {
+      CrosshairRenderer.invalidateBgCache();
+    }
+    const state = getHudState();
+    HudRenderer.render(els.hudCanvas, state, previewBackground);
+    const modalCanvas = getModalCanvasIf('hud');
+    if (modalCanvas) {
+      HudRenderer.render(modalCanvas, state, previewBackground);
+    }
+  }
+
   function updatePreview() {
     if (activeSectionId === 'viewmodel') {
       updateViewmodelPreview();
@@ -392,6 +439,10 @@
     }
     if (activeSectionId === 'radar') {
       updateRadarPreview();
+      return;
+    }
+    if (activeSectionId === 'hud') {
+      updateHudPreview();
       return;
     }
     if (activeSectionId !== 'crosshair') return;
@@ -491,6 +542,7 @@
       { el: els.canvasWrap, sectionId: 'crosshair' },
       { el: els.viewmodelCanvasWrap, sectionId: 'viewmodel' },
       { el: els.radarCanvasWrap, sectionId: 'radar' },
+      { el: els.hudCanvasWrap, sectionId: 'hud' },
     ];
 
     for (const { el, sectionId } of wraps) {
@@ -643,12 +695,14 @@
     const isCrosshair = activeSectionId === 'crosshair';
     const isViewmodel = activeSectionId === 'viewmodel';
     const isRadar = activeSectionId === 'radar';
+    const isHud = activeSectionId === 'hud';
     const visual = hasVisualPreview();
 
     if (els.visualPreview) els.visualPreview.hidden = !visual;
     els.crosshairPreview.hidden = !isCrosshair;
     if (els.viewmodelPreview) els.viewmodelPreview.hidden = !isViewmodel;
     if (els.radarPreview) els.radarPreview.hidden = !isRadar;
+    if (els.hudPreview) els.hudPreview.hidden = !isHud;
     if (els.crosshairToolbarExtras) els.crosshairToolbarExtras.hidden = !isCrosshair;
     els.sectionSummary.hidden = visual;
 
@@ -670,6 +724,10 @@
     } else if (isRadar) {
       CrosshairRenderer.stopAnimation();
       updateRadarPreview();
+    } else if (isHud) {
+      CrosshairRenderer.stopAnimation();
+      RadarRenderer.stopAnimation();
+      updateHudPreview();
     } else {
       CrosshairRenderer.stopAnimation();
       RadarRenderer.stopAnimation();
@@ -2228,6 +2286,9 @@
       if (els.radarCanvasWrap) {
         new ResizeObserver(onLayoutChange).observe(els.radarCanvasWrap);
       }
+      if (els.hudCanvasWrap) {
+        new ResizeObserver(onLayoutChange).observe(els.hudCanvasWrap);
+      }
     }
 
     window.addEventListener('resize', onLayoutChange);
@@ -2255,6 +2316,7 @@
     initPreviewMode();
     initViewmodelWeaponToggle();
     initRadarPreviewToggles();
+    initHudPreviewToggles();
     initCustomPresets();
     initKeyboardShortcuts();
     initExportScope();
