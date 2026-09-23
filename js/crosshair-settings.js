@@ -38,6 +38,9 @@ const CROSSHAIR_LEGACY_KEY_MAP = {
 /** Styles that animate with weapon inaccuracy / movement (preview). */
 const CROSSHAIR_DYNAMIC_STYLES = [0, 1, 2, 5, 7];
 
+/** Styles that expose Dynamic Spread Limit in Style Settings. */
+const CROSSHAIR_SPREAD_LIMIT_STYLES = [0, 1, 7];
+
 /** Style 2 (Dynamic Cross Classic) uses the split-distance alpha controls. */
 const CROSSHAIR_SPLIT_STYLES = [2];
 
@@ -46,6 +49,15 @@ const CROSSHAIR_CROSS_STYLES = [0, 2, 4, 5, 7];
 
 /** Styles that draw a circle. */
 const CROSSHAIR_CIRCLE_STYLES = [1, 3];
+
+/** Styles that expose Length in Style Settings (cross / quad, not circles or dot). */
+const CROSSHAIR_LENGTH_STYLES = [0, 2, 4, 5, 7];
+
+/** Styles that expose Gap in Style Settings (includes static circle; not dynamic circle or dot). */
+const CROSSHAIR_GAP_STYLES = [0, 2, 3, 4, 5, 7];
+
+/** Styles that expose Center Dot (everything except Dot Only). */
+const CROSSHAIR_CENTER_DOT_STYLES = [0, 1, 2, 3, 4, 5, 7];
 
 function presetColorToCss(value) {
   const rgb = CROSSHAIR_PRESET_COLORS[value];
@@ -190,13 +202,13 @@ const CROSSHAIR_SETTINGS = {
   },
   cl_crosshair_length: {
     label: 'Length',
-    description: 'Length of each crosshair bar (or circle radius contribution). Scaled with screen resolution.',
+    description: 'Length of each crosshair bar. Scaled with screen resolution.',
     type: 'range',
     default: 8,
     min: 0,
     max: 100,
     step: 1,
-    enabledWhen: { key: 'cl_crosshairstyle', values: [0, 1, 2, 3, 4, 5, 7] },
+    enabledWhen: { key: 'cl_crosshairstyle', values: CROSSHAIR_LENGTH_STYLES },
     hideWhenDisabled: true,
   },
   cl_crosshair_gap: {
@@ -205,9 +217,9 @@ const CROSSHAIR_SETTINGS = {
     type: 'range',
     default: 4,
     min: -50,
-    max: 50,
+    max: 128,
     step: 1,
-    enabledWhen: { key: 'cl_crosshairstyle', values: [0, 1, 2, 3, 4, 5, 7] },
+    enabledWhen: { key: 'cl_crosshairstyle', values: CROSSHAIR_GAP_STYLES },
     hideWhenDisabled: true,
   },
   cl_crosshair_thickness: {
@@ -224,7 +236,7 @@ const CROSSHAIR_SETTINGS = {
     description: 'Draw a dot at the center of the crosshair.',
     type: 'toggle',
     default: 0,
-    enabledWhen: { key: 'cl_crosshairstyle', values: [0, 1, 2, 3, 4, 5, 7] },
+    enabledWhen: { key: 'cl_crosshairstyle', values: CROSSHAIR_CENTER_DOT_STYLES },
     hideWhenDisabled: true,
   },
   cl_crosshair_t: {
@@ -292,7 +304,7 @@ const CROSSHAIR_SETTINGS = {
     min: 0,
     max: 255,
     step: 1,
-    enabledWhen: { key: 'cl_crosshairstyle', values: CROSSHAIR_DYNAMIC_STYLES },
+    enabledWhen: { key: 'cl_crosshairstyle', values: CROSSHAIR_SPREAD_LIMIT_STYLES },
     hideWhenDisabled: true,
   },
   cl_crosshair_dynamic_splitdist: {

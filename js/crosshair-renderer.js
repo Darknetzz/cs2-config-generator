@@ -516,8 +516,13 @@ const CrosshairRenderer = (() => {
     }
 
     // Styles 1 / 3 — Circle (1 dynamic, 3 static).
+    // In-game Style Settings: dynamic circle has no Length/Gap; static circle has Gap only.
     if (isCircleStyle(style)) {
-      const radius = Math.max(thickness, Math.abs(gap) + length);
+      const lengthPart = 0;
+      const gapPart = style === 1
+        ? getSpreadExtra(state, dynamicFactor)
+        : gap;
+      const radius = Math.max(thickness, Math.abs(gapPart) + lengthPart);
       strokeCircle(
         ctx,
         centerX,

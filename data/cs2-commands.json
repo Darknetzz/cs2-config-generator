@@ -5322,7 +5322,7 @@
       ],
       "default": "4",
       "description": "Offset added to the gap between the crosshair center and the bars.",
-      "accepted": "-50 – 50 (step 1)",
+      "accepted": "-50 – 128 (step 1)",
       "kind": "cvar",
       "category": "Crosshair"
     },
