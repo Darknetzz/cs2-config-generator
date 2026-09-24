@@ -5542,8 +5542,8 @@
         "per_user"
       ],
       "default": "7",
-      "description": "0 = DEFAULT (DISABLED), 1 = DEFAULT STATIC (DISABLED), 2 = DEFAULT (accurate recoil/spread feedback with a fixed inner part), 3 = ACCURATE DYNAMIC (DISABLED) (accurate recoil/spread feedback), 4 = DEFAULT STATIC, 5 = LEGACY (fake recoil - inaccurate feedback)",
-      "accepted": "0 / 1 / 2 / 3 / 4 / 5 / 6 / 7",
+      "description": "Crosshair style. 0 = Dynamic Cross, 1 = Dynamic Circle, 2 = Dynamic Cross (Classic), 3 = Static Circle, 4 = Static Cross, 5 = Dynamic Cross (Legacy / Shot Feedback), 6 = Dot Only, 7 = Dynamic Quad, 8 = Static Square. Styles 0, 1 and 7 track the weapon's actual inaccuracy.",
+      "accepted": "0 / 1 / 2 / 3 / 4 / 5 / 6 / 7 / 8",
       "kind": "cvar",
       "category": "Crosshair"
     },

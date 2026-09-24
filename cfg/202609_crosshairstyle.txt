@@ -6,3 +6,4 @@ Dynamic Circle          = 1
 Dynamic Cross (Classic) = 2
 Dynamic Cross (Legacy/Shot Feedback) = 5
 Dynamic Quad            = 7
+Static Square           = 8 

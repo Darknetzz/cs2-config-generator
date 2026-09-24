@@ -50,14 +50,17 @@ const CROSSHAIR_CROSS_STYLES = [0, 2, 4, 5, 7];
 /** Styles that draw a circle. */
 const CROSSHAIR_CIRCLE_STYLES = [1, 3];
 
-/** Styles that expose Length in Style Settings (cross / quad, not circles or dot). */
+/** Styles that draw a square outline. */
+const CROSSHAIR_SQUARE_STYLES = [8];
+
+/** Styles that expose Length in Style Settings (cross / quad, not circles / square / dot). */
 const CROSSHAIR_LENGTH_STYLES = [0, 2, 4, 5, 7];
 
-/** Styles that expose Gap in Style Settings (includes static circle; not dynamic circle or dot). */
-const CROSSHAIR_GAP_STYLES = [0, 2, 3, 4, 5, 7];
+/** Styles that expose Gap in Style Settings (includes static circle / square; not dynamic circle or dot). */
+const CROSSHAIR_GAP_STYLES = [0, 2, 3, 4, 5, 7, 8];
 
 /** Styles that expose Center Dot (everything except Dot Only). */
-const CROSSHAIR_CENTER_DOT_STYLES = [0, 1, 2, 3, 4, 5, 7];
+const CROSSHAIR_CENTER_DOT_STYLES = [0, 1, 2, 3, 4, 5, 7, 8];
 
 function presetColorToCss(value) {
   const rgb = CROSSHAIR_PRESET_COLORS[value];
@@ -198,6 +201,7 @@ const CROSSHAIR_SETTINGS = {
       { value: 5, label: '5 — Dynamic Cross (Legacy / Shot Feedback)' },
       { value: 6, label: '6 — Dot Only' },
       { value: 7, label: '7 — Dynamic Quad' },
+      { value: 8, label: '8 — Static Square' },
     ],
   },
   cl_crosshair_length: {
@@ -503,6 +507,7 @@ CrosshairSection.QUICK_COLORS = CROSSHAIR_QUICK_COLORS;
 CrosshairSection.LEGACY_KEY_MAP = CROSSHAIR_LEGACY_KEY_MAP;
 CrosshairSection.DYNAMIC_STYLES = CROSSHAIR_DYNAMIC_STYLES;
 CrosshairSection.CIRCLE_STYLES = CROSSHAIR_CIRCLE_STYLES;
+CrosshairSection.SQUARE_STYLES = CROSSHAIR_SQUARE_STYLES;
 CrosshairSection.CROSS_STYLES = CROSSHAIR_CROSS_STYLES;
 CrosshairSection.IMPORT_ALIASES = new Set([
   ...Object.keys(CROSSHAIR_LEGACY_KEY_MAP),

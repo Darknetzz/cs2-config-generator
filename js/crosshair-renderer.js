@@ -1,5 +1,5 @@
 /**
- * Canvas renderer for CS2 crosshair preview (Rush Hour styles 0–7).
+ * Canvas renderer for CS2 crosshair preview (Rush Hour styles 0–8).
  * Resolution-independent length / gap / thickness units, scaled to the preview.
  */
 const CrosshairRenderer = (() => {
@@ -57,6 +57,10 @@ const CrosshairRenderer = (() => {
 
   function isCircleStyle(style) {
     return CrosshairSection.CIRCLE_STYLES.includes(Number(style));
+  }
+
+  function isSquareStyle(style) {
+    return CrosshairSection.SQUARE_STYLES.includes(Number(style));
   }
 
   function isAnimating() {
@@ -263,6 +267,25 @@ const CrosshairRenderer = (() => {
     ctx.strokeStyle = `rgba(${color.r}, ${color.g}, ${color.b}, ${color.a})`;
     ctx.lineWidth = lw;
     ctx.stroke();
+  }
+
+  function strokeSquare(ctx, cx, cy, halfSize, lineWidth, color, drawOutlineEnabled, scale) {
+    if (halfSize <= 0 || lineWidth <= 0) return;
+
+    const x = (cx - halfSize) * scale;
+    const y = (cy - halfSize) * scale;
+    const size = halfSize * 2 * scale;
+    const lw = Math.max(1, lineWidth * scale);
+
+    if (drawOutlineEnabled) {
+      ctx.strokeStyle = 'rgba(0, 0, 0, 1)';
+      ctx.lineWidth = lw + OUTLINE_PAD * 2 * scale;
+      ctx.strokeRect(x, y, size, size);
+    }
+
+    ctx.strokeStyle = `rgba(${color.r}, ${color.g}, ${color.b}, ${color.a})`;
+    ctx.lineWidth = lw;
+    ctx.strokeRect(x, y, size, size);
   }
 
   function drawQuadCorners(ctx, cx, cy, distance, arm, thickness, color, drawOutlineEnabled, scale) {
@@ -528,6 +551,26 @@ const CrosshairRenderer = (() => {
         centerX,
         centerY,
         radius,
+        thickness,
+        color,
+        drawOutlineEnabled,
+        scale,
+      );
+      if (showDot) {
+        drawPart(ctx, dot, color, drawOutlineEnabled, OUTLINE_PAD, scale);
+      }
+      ctx.restore();
+      return;
+    }
+
+    // Style 8 — Static Square (Gap + Thickness + optional center dot; no Length / T).
+    if (isSquareStyle(style)) {
+      const halfSize = Math.max(thickness, Math.abs(gap));
+      strokeSquare(
+        ctx,
+        centerX,
+        centerY,
+        halfSize,
         thickness,
         color,
         drawOutlineEnabled,
