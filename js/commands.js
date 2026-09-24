@@ -14,11 +14,17 @@ const ConfigCommands = (() => {
 
   function parseCommandValue(section, key, raw) {
     const meta = section.SETTINGS[key];
-    const trimmed = String(raw).trim();
+    const trimmed = String(raw).trim().replace(/^["']|["']$/g, '');
+    const lower = trimmed.toLowerCase();
 
     if (meta.type === 'toggle' && meta.consoleFormat === 'bool') {
-      if (trimmed === 'true') return 1;
-      if (trimmed === 'false') return 0;
+      if (lower === 'true') return 1;
+      if (lower === 'false') return 0;
+    }
+
+    // Engine dumps often emit true/false for numeric 0/1 (or 0/1/2) cvars.
+    if (lower === 'true' || lower === 'false') {
+      return section.clamp(key, lower === 'true' ? 1 : 0);
     }
 
     return section.clamp(key, trimmed);

@@ -193,7 +193,24 @@ const CrosshairRenderer = (() => {
     ctx.fillRect(rect.x0 * scale, rect.y0 * scale, w, h);
   }
 
-  function drawOutline(ctx, rect, pad, scale) {
+  function drawOutline(ctx, rect, pad, scale, mode = 1) {
+    if (mode === 2) {
+      // Half outline: top + left edges only (top-left portions).
+      drawRect(ctx, {
+        x0: rect.x0 - pad,
+        y0: rect.y0 - pad,
+        x1: rect.x1,
+        y1: rect.y0,
+      }, { r: 0, g: 0, b: 0, a: 1 }, scale);
+      drawRect(ctx, {
+        x0: rect.x0 - pad,
+        y0: rect.y0,
+        x1: rect.x0,
+        y1: rect.y1,
+      }, { r: 0, g: 0, b: 0, a: 1 }, scale);
+      return;
+    }
+
     drawRect(ctx, {
       x0: rect.x0 - pad,
       y0: rect.y0 - pad,
@@ -202,12 +219,12 @@ const CrosshairRenderer = (() => {
     }, { r: 0, g: 0, b: 0, a: 1 }, scale);
   }
 
-  function drawPart(ctx, rect, color, drawOutlineEnabled, outlinePad, scale) {
-    if (drawOutlineEnabled) drawOutline(ctx, rect, outlinePad, scale);
+  function drawPart(ctx, rect, color, outlineMode, outlinePad, scale) {
+    if (outlineMode > 0) drawOutline(ctx, rect, outlinePad, scale, outlineMode);
     drawRect(ctx, rect, color, scale);
   }
 
-  function drawArm(ctx, arm, color, drawOutlineEnabled, outlinePad, scale, dynamic) {
+  function drawArm(ctx, arm, color, outlineMode, outlinePad, scale, dynamic) {
     const {
       style,
       factor,
@@ -218,7 +235,7 @@ const CrosshairRenderer = (() => {
     } = dynamic;
 
     if (style !== 2 || factor <= 0) {
-      drawPart(ctx, arm, color, drawOutlineEnabled, outlinePad, scale);
+      drawPart(ctx, arm, color, outlineMode, outlinePad, scale);
       return;
     }
 
@@ -229,7 +246,7 @@ const CrosshairRenderer = (() => {
       ctx,
       inner,
       withAlpha(color, innerAlphaMod),
-      drawOutlineEnabled,
+      outlineMode,
       outlinePad,
       scale,
     );
@@ -239,27 +256,43 @@ const CrosshairRenderer = (() => {
         ctx,
         outer,
         withAlpha(color, outerAlphaMod),
-        drawOutlineEnabled,
+        outlineMode,
         outlinePad,
         scale,
       );
     }
   }
 
-  function strokeCircle(ctx, cx, cy, radius, lineWidth, color, drawOutlineEnabled, scale) {
+  function strokeOutlinePath(ctx, lineWidth, scale, drawPath) {
+    const lw = Math.max(1, lineWidth * scale);
+    ctx.strokeStyle = 'rgba(0, 0, 0, 1)';
+    ctx.lineWidth = lw + OUTLINE_PAD * 2 * scale;
+    ctx.lineCap = 'butt';
+    ctx.lineJoin = 'miter';
+    drawPath();
+    ctx.stroke();
+    return lw;
+  }
+
+  function strokeCircle(ctx, cx, cy, radius, lineWidth, color, outlineMode, scale) {
     if (radius <= 0 || lineWidth <= 0) return;
 
     const x = cx * scale;
     const y = cy * scale;
     const r = radius * scale;
-    const lw = Math.max(1, lineWidth * scale);
 
-    if (drawOutlineEnabled) {
-      ctx.beginPath();
-      ctx.arc(x, y, r, 0, Math.PI * 2);
-      ctx.strokeStyle = 'rgba(0, 0, 0, 1)';
-      ctx.lineWidth = lw + OUTLINE_PAD * 2 * scale;
-      ctx.stroke();
+    let lw = Math.max(1, lineWidth * scale);
+    if (outlineMode === 1) {
+      lw = strokeOutlinePath(ctx, lineWidth, scale, () => {
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+      });
+    } else if (outlineMode === 2) {
+      // Top-left arc: north → west (counterclockwise).
+      lw = strokeOutlinePath(ctx, lineWidth, scale, () => {
+        ctx.beginPath();
+        ctx.arc(x, y, r, 3 * Math.PI / 2, Math.PI, true);
+      });
     }
 
     ctx.beginPath();
@@ -269,18 +302,26 @@ const CrosshairRenderer = (() => {
     ctx.stroke();
   }
 
-  function strokeSquare(ctx, cx, cy, halfSize, lineWidth, color, drawOutlineEnabled, scale) {
+  function strokeSquare(ctx, cx, cy, halfSize, lineWidth, color, outlineMode, scale) {
     if (halfSize <= 0 || lineWidth <= 0) return;
 
     const x = (cx - halfSize) * scale;
     const y = (cy - halfSize) * scale;
     const size = halfSize * 2 * scale;
-    const lw = Math.max(1, lineWidth * scale);
 
-    if (drawOutlineEnabled) {
-      ctx.strokeStyle = 'rgba(0, 0, 0, 1)';
-      ctx.lineWidth = lw + OUTLINE_PAD * 2 * scale;
-      ctx.strokeRect(x, y, size, size);
+    let lw = Math.max(1, lineWidth * scale);
+    if (outlineMode === 1) {
+      lw = strokeOutlinePath(ctx, lineWidth, scale, () => {
+        ctx.beginPath();
+        ctx.rect(x, y, size, size);
+      });
+    } else if (outlineMode === 2) {
+      lw = strokeOutlinePath(ctx, lineWidth, scale, () => {
+        ctx.beginPath();
+        ctx.moveTo(x, y + size);
+        ctx.lineTo(x, y);
+        ctx.lineTo(x + size, y);
+      });
     }
 
     ctx.strokeStyle = `rgba(${color.r}, ${color.g}, ${color.b}, ${color.a})`;
@@ -288,7 +329,7 @@ const CrosshairRenderer = (() => {
     ctx.strokeRect(x, y, size, size);
   }
 
-  function drawQuadCorners(ctx, cx, cy, distance, arm, thickness, color, drawOutlineEnabled, scale) {
+  function drawQuadCorners(ctx, cx, cy, distance, arm, thickness, color, outlineMode, scale) {
     const t = Math.max(1, thickness);
     const len = Math.max(1, arm);
     const corners = [
@@ -311,8 +352,8 @@ const CrosshairRenderer = (() => {
         x1: corner.x + t / 2,
         y1: corner.dy > 0 ? corner.y + len : corner.y,
       };
-      drawPart(ctx, h, color, drawOutlineEnabled, OUTLINE_PAD, scale);
-      drawPart(ctx, v, color, drawOutlineEnabled, OUTLINE_PAD, scale);
+      drawPart(ctx, h, color, outlineMode, OUTLINE_PAD, scale);
+      drawPart(ctx, v, color, outlineMode, OUTLINE_PAD, scale);
     }
   }
 
@@ -517,7 +558,7 @@ const CrosshairRenderer = (() => {
     const length = state.cl_crosshair_length;
     const showDot = state.cl_crosshairdot === 1 || state.cl_crosshairstyle === 6;
     const tShape = state.cl_crosshair_t === 1;
-    const drawOutlineEnabled = state.cl_crosshair_drawoutline === 1;
+    const outlineMode = Number(state.cl_crosshair_drawoutline) || 0;
     const style = state.cl_crosshairstyle;
 
     const dynamic = {
@@ -533,7 +574,7 @@ const CrosshairRenderer = (() => {
 
     // Style 6 — Dot Only.
     if (style === 6) {
-      drawPart(ctx, dot, color, drawOutlineEnabled, OUTLINE_PAD, scale);
+      drawPart(ctx, dot, color, outlineMode, OUTLINE_PAD, scale);
       ctx.restore();
       return;
     }
@@ -553,11 +594,11 @@ const CrosshairRenderer = (() => {
         radius,
         thickness,
         color,
-        drawOutlineEnabled,
+        outlineMode,
         scale,
       );
       if (showDot) {
-        drawPart(ctx, dot, color, drawOutlineEnabled, OUTLINE_PAD, scale);
+        drawPart(ctx, dot, color, outlineMode, OUTLINE_PAD, scale);
       }
       ctx.restore();
       return;
@@ -573,11 +614,11 @@ const CrosshairRenderer = (() => {
         halfSize,
         thickness,
         color,
-        drawOutlineEnabled,
+        outlineMode,
         scale,
       );
       if (showDot) {
-        drawPart(ctx, dot, color, drawOutlineEnabled, OUTLINE_PAD, scale);
+        drawPart(ctx, dot, color, outlineMode, OUTLINE_PAD, scale);
       }
       ctx.restore();
       return;
@@ -586,13 +627,13 @@ const CrosshairRenderer = (() => {
     const arms = computeArms(dot, gap, length);
 
     if (showDot) {
-      drawPart(ctx, dot, color, drawOutlineEnabled, OUTLINE_PAD, scale);
+      drawPart(ctx, dot, color, outlineMode, OUTLINE_PAD, scale);
     }
 
     if (length !== 0) {
       for (const arm of arms) {
         if (tShape && arm.side === 'top') continue;
-        drawArm(ctx, arm, color, drawOutlineEnabled, OUTLINE_PAD, scale, dynamic);
+        drawArm(ctx, arm, color, outlineMode, OUTLINE_PAD, scale, dynamic);
       }
     }
 
@@ -608,7 +649,7 @@ const CrosshairRenderer = (() => {
         quadArm,
         thickness,
         withAlpha(color, 0.85),
-        drawOutlineEnabled,
+        outlineMode,
         scale,
       );
     }

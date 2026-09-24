@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Changed only** export mode (on by default): preview, copy, and `.cfg` download omit settings that still match the Reset baseline; preference is saved in `localStorage`
 - Rush Hour crosshair styles: Dynamic Cross, Dynamic Circle, Dynamic Cross Classic, Static Circle, Static Cross, Legacy/Shot Feedback, Dot Only, Dynamic Quad (new default), and Static Square
+- Half outline mode for `cl_crosshair_drawoutline` (`0` none / `1` full / `2` half — top-left edges)
 - `cl_crosshair_dynamic_spread_limit` for dynamic style expansion
 - Sniper options: delay unscope and auto-rezoom
 - Quick RGB color chips (replaces the old preset color cvar)
@@ -35,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Crosshair Gap range is now 0–128 (matches in-game Style Settings; was -50–50)
 - Pro presets: negative legacy gaps clamped to 0
 - Crosshair Style Settings visibility matches in-game options per style (Length / Gap / Center Dot / T / Dynamic Spread Limit / Classic split controls)
+- Crosshair Outline is a Style Settings select (No / Full / Half) instead of an on/off group toggle
 - Export panel: **Changed only** / **All settings** toggle replaces the separate **Copy changed only** button; preview and downloads follow the same mode
 - Crosshair cvars updated for Rush Hour: `cl_crosshair_length` / `_gap` / `_thickness`, `cl_crosshaircolor_a`, styles 0–8, resolution-independent preview
 - Import / localStorage / custom presets migrate legacy crosshair names (`cl_crosshairsize`, `cl_crosshairalpha`, color presets, etc.)

@@ -106,6 +106,20 @@ function migrateLegacyCrosshairSource(source) {
     delete out.cl_crosshairusealpha;
   }
 
+  if ('cl_crosshair_drawoutline' in out) {
+    const raw = out.cl_crosshair_drawoutline;
+    if (typeof raw === 'boolean') {
+      out.cl_crosshair_drawoutline = raw ? 1 : 0;
+    } else {
+      const lower = String(raw).trim().toLowerCase();
+      if (lower === 'true' || lower === 'yes' || lower === 'on') {
+        out.cl_crosshair_drawoutline = 1;
+      } else if (lower === 'false' || lower === 'no' || lower === 'off') {
+        out.cl_crosshair_drawoutline = 0;
+      }
+    }
+  }
+
   delete out.cl_crosshair_outlinethickness;
   delete out.cl_crosshairgap_useweaponvalue;
   delete out.cl_fixedcrosshairgap;
@@ -119,6 +133,7 @@ const CROSSHAIR_GROUPS = [
     label: 'Shape & Style',
     settings: [
       'cl_crosshairstyle',
+      'cl_crosshair_drawoutline',
       'cl_crosshair_length',
       'cl_crosshair_gap',
       'cl_crosshair_thickness',
@@ -134,14 +149,6 @@ const CROSSHAIR_GROUPS = [
       'cl_crosshaircolor_g',
       'cl_crosshaircolor_b',
       'cl_crosshaircolor_a',
-    ],
-  },
-  {
-    id: 'outline',
-    label: 'Outline',
-    headerToggle: 'cl_crosshair_drawoutline',
-    settings: [
-      'cl_crosshair_drawoutline',
     ],
   },
   {
@@ -289,9 +296,14 @@ const CROSSHAIR_SETTINGS = {
   },
   cl_crosshair_drawoutline: {
     label: 'Outline',
-    description: 'Draw a black outline around the crosshair for better visibility.',
-    type: 'toggle',
+    description: 'Black outline around the crosshair. Half outline draws only the top-left edges.',
+    type: 'select',
     default: 1,
+    options: [
+      { value: 0, label: '0 — No outline' },
+      { value: 1, label: '1 — Full outline' },
+      { value: 2, label: '2 — Half outline' },
+    ],
   },
   cl_crosshair_recoil: {
     label: 'Follow recoil',
@@ -556,6 +568,20 @@ CrosshairSection.IMPORT_ALIASES = new Set([
       const on = ['1', 'true', 'yes', 'on'].includes(String(rawValue).trim().toLowerCase())
         || Number(rawValue) === 1;
       if (!on) state.cl_crosshaircolor_a = 255;
+      return true;
+    }
+
+    if (key === 'cl_crosshair_drawoutline') {
+      const lower = String(rawValue).trim().toLowerCase();
+      if (lower === 'true' || lower === 'yes' || lower === 'on') {
+        state.cl_crosshair_drawoutline = 1;
+        return true;
+      }
+      if (lower === 'false' || lower === 'no' || lower === 'off') {
+        state.cl_crosshair_drawoutline = 0;
+        return true;
+      }
+      state.cl_crosshair_drawoutline = CrosshairSection.clamp(key, rawValue);
       return true;
     }
 

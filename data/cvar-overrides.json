@@ -90,9 +90,9 @@
   {
     "name": "cl_crosshair_drawoutline",
     "flags": ["cl", "a", "per_user"],
-    "default": "true",
-    "description": "Draw a black outline around the crosshair for better visibility",
-    "accepted": "0 / 1",
+    "default": "1",
+    "description": "Crosshair outline. 0 = No outline, 1 = Full outline, 2 = Half outline (top-left edges only).",
+    "accepted": "0 / 1 / 2",
     "kind": "cvar"
   },
   {
